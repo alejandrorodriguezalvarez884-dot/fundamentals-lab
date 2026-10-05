@@ -16,17 +16,18 @@ import { add, h } from "./dom";
 import { SERIES } from "./charts";
 import type { Series } from "./types";
 
-const UP = "#15803d";
-const DOWN = "#be123c";
+const UP = "#089981";
+const DOWN = "#f23645";
 
 const base = (el: HTMLElement, height: number) =>
   createChart(el, {
     height,
     autoSize: true,
-    layout: { background: { type: ColorType.Solid, color: "#ffffff" }, textColor: "#78716c", fontFamily: "Inter, system-ui, sans-serif", fontSize: 11, panes: { separatorColor: "#e7e5e4" } },
-    grid: { vertLines: { color: "#f5f5f4" }, horzLines: { color: "#f5f5f4" } },
-    rightPriceScale: { borderColor: "#e7e5e4" },
-    timeScale: { borderColor: "#e7e5e4" },
+    localization: { locale: "en-US" },
+    layout: { background: { type: ColorType.Solid, color: "#1e222d" }, textColor: "#868993", fontFamily: "Inter, system-ui, sans-serif", fontSize: 11, attributionLogo: true, panes: { separatorColor: "#2a2e39" } },
+    grid: { vertLines: { color: "#262a35" }, horzLines: { color: "#262a35" } },
+    rightPriceScale: { borderColor: "#363a45" },
+    timeScale: { borderColor: "#363a45" },
     crosshair: { mode: CrosshairMode.Normal },
   });
 
@@ -59,11 +60,11 @@ function rangeButtons(chart: IChartApi, n: number, initial = "1Y"): HTMLElement 
 }
 
 function toggle(label: string, on: boolean, change: (on: boolean) => void, color: string): HTMLElement {
-  const lab = h("label", "inline-flex cursor-pointer items-center gap-1.5 text-xs text-stone-600");
+  const lab = h("label", "inline-flex cursor-pointer items-center gap-1.5 text-xs text-muted");
   const box = h("input") as HTMLInputElement;
   box.type = "checkbox";
   box.checked = on;
-  box.className = "accent-stone-800";
+  box.className = "accent-accent";
   box.addEventListener("change", () => change(box.checked));
   const sw = h("span", "inline-block h-[3px] w-4 rounded-full");
   sw.style.background = color;
@@ -89,18 +90,18 @@ export function technicalChart(s: Series): HTMLElement {
   };
   const sma50 = overlay(s.sma50, SERIES[0]);
   const sma200 = overlay(s.sma200, SERIES[1]);
-  const bbU = overlay(s.bb_upper, "#a8a29e", LineStyle.Dashed, false);
-  const bbL = overlay(s.bb_lower, "#a8a29e", LineStyle.Dashed, false);
+  const bbU = overlay(s.bb_upper, "#787b86", LineStyle.Dashed, false);
+  const bbL = overlay(s.bb_lower, "#787b86", LineStyle.Dashed, false);
 
   const volume = chart.addSeries(HistogramSeries, { priceFormat: { type: "volume" }, priceLineVisible: false, lastValueVisible: false }, 1);
-  volume.setData(dates.map((d, i) => ({ time: d as Time, value: s.volume[i] ?? 0, color: (s.close[i] ?? 0) >= (s.open[i] ?? 0) ? "#86efac" : "#fda4af" })));
+  volume.setData(dates.map((d, i) => ({ time: d as Time, value: s.volume[i] ?? 0, color: (s.close[i] ?? 0) >= (s.open[i] ?? 0) ? "rgba(8,153,129,0.45)" : "rgba(242,54,69,0.45)" })));
 
-  const rsi = chart.addSeries(LineSeries, { color: "#4a3aa7", lineWidth: 2, priceLineVisible: false }, 2);
+  const rsi = chart.addSeries(LineSeries, { color: "#7e57c2", lineWidth: 2, priceLineVisible: false }, 2);
   rsi.setData(line(s.rsi14, dates));
-  for (const level of [70, 30]) rsi.createPriceLine({ price: level, color: "#a8a29e", lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: "" });
+  for (const level of [70, 30]) rsi.createPriceLine({ price: level, color: "#787b86", lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: "" });
 
   const hist = chart.addSeries(HistogramSeries, { priceLineVisible: false, lastValueVisible: false }, 3);
-  hist.setData(dates.flatMap((d, i) => (s.macd_hist[i] === null ? [] : [{ time: d as Time, value: s.macd_hist[i]!, color: s.macd_hist[i]! >= 0 ? "#86efac" : "#fda4af" }])));
+  hist.setData(dates.flatMap((d, i) => (s.macd_hist[i] === null ? [] : [{ time: d as Time, value: s.macd_hist[i]!, color: s.macd_hist[i]! >= 0 ? "rgba(8,153,129,0.45)" : "rgba(242,54,69,0.45)" }])));
   const macdLine = chart.addSeries(LineSeries, { color: SERIES[0], lineWidth: 2, priceLineVisible: false, lastValueVisible: false }, 3);
   macdLine.setData(line(s.macd, dates));
   const signal = chart.addSeries(LineSeries, { color: SERIES[1], lineWidth: 2, priceLineVisible: false, lastValueVisible: false }, 3);
@@ -121,11 +122,11 @@ export function technicalChart(s: Series): HTMLElement {
     h("div", "flex flex-wrap items-center gap-x-4 gap-y-1"),
     toggle("50-day average", true, show([sma50]), SERIES[0]),
     toggle("200-day average", true, show([sma200]), SERIES[1]),
-    toggle("Bollinger bands (20, 2)", false, show([bbU, bbL]), "#a8a29e"),
+    toggle("Bollinger bands (20, 2)", false, show([bbU, bbL]), "#787b86"),
   );
   add(controls, toggles, rangeButtons(chart, dates.length));
   const panesLegend = add(
-    h("div", "mt-2 flex flex-wrap gap-x-4 text-xs text-stone-500"),
+    h("div", "mt-2 flex flex-wrap gap-x-4 text-xs text-muted"),
     h("span", "", "Panes, top to bottom: price · volume · RSI (14) with 30 and 70 · MACD (12, 26, 9): MACD blue, signal orange, histogram"),
   );
   wrap.append(panesLegend);
@@ -134,7 +135,7 @@ export function technicalChart(s: Series): HTMLElement {
 
 export function compareChart(dates: string[], series: Record<string, number[]>, tickers: string[]): HTMLElement {
   const wrap = h("div");
-  const legend = h("div", "mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-600");
+  const legend = h("div", "mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted");
   const el = h("div", "w-full");
   el.style.height = "340px";
   add(wrap, legend, el);
@@ -148,7 +149,7 @@ export function compareChart(dates: string[], series: Record<string, number[]>, 
     sw.style.background = color;
     add(legend, add(h("span", "inline-flex items-center gap-1.5 font-medium"), sw, t));
   });
-  const base100 = chart.addSeries(LineSeries, { color: "#a8a29e", lineWidth: 1, lineStyle: LineStyle.Dotted, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false });
+  const base100 = chart.addSeries(LineSeries, { color: "#787b86", lineWidth: 1, lineStyle: LineStyle.Dotted, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false });
   if (dates.length) base100.setData([{ time: dates[0] as Time, value: 100 }, { time: dates[dates.length - 1] as Time, value: 100 }]);
   // Fit once the chart has its width; fitting a zero-width chart leaves the lines squeezed.
   const fit = new ResizeObserver(() => {

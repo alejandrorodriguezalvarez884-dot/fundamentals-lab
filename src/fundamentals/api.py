@@ -7,6 +7,7 @@
     GET /api/stock/{ticker}/reading     the AI reading of the report (may call the model)
     GET /api/compare?tickers=A,B,C      side-by-side comparison of 2 to 5 companies
     GET /api/compare/reading?tickers=   the AI reading of the comparison (may call the model)
+    GET /api/me                         who is signed in to Market Hub, and the hub's address
 
 Everything else is the static site, when FUNDAMENTALS_STATIC_DIR points at its build.
 """
@@ -34,8 +35,10 @@ from .budget import Budget, BudgetReached
 from .compare import compare
 from .config import COMPARE_MAX, COMPARE_MIN, PER_IP_PER_HOUR
 from .fmp import FmpClient, FmpUnavailable
+from .hubauth import HubGate
+from .hubauth import settings as hub_settings
 from .http import UpstreamError
-from .reading import Reader, ReadingRefused
+from .reading import Reader, ReadingRefused, ReadingUnavailable
 from .report import NoData, Reporter, compact
 from .sec import Directory, UnknownCompany
 from .store import Store, default_store
@@ -81,6 +84,8 @@ def _failure(exc: Exception, ticker: str = "") -> HTTPException:
     if isinstance(exc, BudgetReached):
         return HTTPException(429, "The AI reading has reached its spending limit for now. The numbers "
                                   "and charts keep working; readings already written are still shown.")
+    if isinstance(exc, ReadingUnavailable):
+        return HTTPException(503, "The AI reading is not switched on yet. The numbers and charts work.")
     if isinstance(exc, ReadingRefused):
         return HTTPException(502, "The model could not write a reading for this request.")
     if isinstance(exc, FmpUnavailable):
@@ -106,14 +111,20 @@ def _tickers(raw: str) -> list[str]:
 
 def create_app(store: Store | None = None, directory: Directory | None = None,
                reporter: Reporter | None = None, reader: Reader | None = None,
-               static_dir: str | None = None) -> FastAPI:
-    """App factory. Tests pass their own pieces, so they need no network."""
+               static_dir: str | None = None, hub: tuple[str, str] | None | bool = True) -> FastAPI:
+    """App factory. Tests pass their own pieces, so they need no network.
+
+    ``hub`` is (hub URL, hub session secret) to admit only people signed in to Market Hub; by
+    default it comes from HUB_URL and HUB_SESSION_SECRET, and None leaves the service public."""
     logging.basicConfig(level=logging.INFO)
     app = FastAPI(title="Fundamentals Lab", docs_url=None, redoc_url=None, openapi_url=None)
 
     origins = [o.strip() for o in os.environ.get("FUNDAMENTALS_ALLOWED_ORIGINS", "").split(",") if o.strip()]
     if origins:
         app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["GET"], allow_headers=["*"])
+    hub = hub_settings() if hub is True else hub or None
+    if hub:
+        app.add_middleware(HubGate, hub_url=hub[0], secret=hub[1])
 
     store = store or default_store()
     directory = directory or Directory()
@@ -123,6 +134,10 @@ def create_app(store: Store | None = None, directory: Directory | None = None,
     reading_limiter = RateLimiter(PER_IP_PER_HOUR)
 
     def allow(request: Request, limiter: RateLimiter) -> None:
+        # Behind the hub's sign-in there is no per-address limit (the owner's choice); the
+        # spending caps of the reading still apply.
+        if hub:
+            return
         if not limiter.allow(_client_address(request)):
             raise HTTPException(429, "Too many requests from this address. Try again in an hour.")
 
@@ -133,6 +148,10 @@ def create_app(store: Store | None = None, directory: Directory | None = None,
     @app.get("/api/health")
     def health() -> dict:
         return {"ok": True}
+
+    @app.get("/api/me")
+    def me(request: Request) -> dict:
+        return {"user": getattr(request.state, "user", None), "hub": hub[0] if hub else None}
 
     @app.get("/api/search")
     def search(q: str = Query(min_length=1, max_length=60)) -> dict:

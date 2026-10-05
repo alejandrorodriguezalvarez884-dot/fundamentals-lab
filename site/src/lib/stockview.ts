@@ -15,16 +15,16 @@ export function header(r: Report): HTMLElement {
   const left = add(
     h("div", "min-w-0"),
     add(h("div", "flex flex-wrap items-baseline gap-x-3"),
-      h("h1", "font-serif text-3xl font-semibold tracking-tight text-stone-900 sm:text-4xl", tidyName(p.name)),
-      h("span", "text-lg font-semibold text-stone-500", r.ticker)),
-    h("p", "mt-1 text-sm text-stone-500", [p.sector, p.industry, p.exchange].filter(Boolean).join(" · ")),
+      h("h1", " text-3xl font-semibold tracking-tight text-ink-strong sm:text-4xl", tidyName(p.name)),
+      h("span", "text-lg font-semibold text-muted", r.ticker)),
+    h("p", "mt-1 text-sm text-muted", [p.sector, p.industry, p.exchange].filter(Boolean).join(" · ")),
   );
   const v = r.valuation;
   const right = add(
     h("div", "flex items-end gap-6"),
     stat("Price", price(v.price), p.change_pct != null ? `${signedPct(p.change_pct / 100, 2)} today` : undefined),
     stat("Market cap", money(v.market_cap)),
-    add(h("a", "mb-1 rounded-full border border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-700 hover:border-stone-500"), "Compare…"),
+    add(h("a", "mb-1 rounded-full border border-line-strong px-3 py-1.5 text-sm font-medium text-ink hover:border-muted"), "Compare…"),
   );
   (right.lastChild as HTMLAnchorElement).href = compareUrl([r.ticker]);
   return add(el, left, right);
@@ -32,9 +32,9 @@ export function header(r: Report): HTMLElement {
 
 export function meta(r: Report): HTMLElement {
   const src = Object.entries(r.sources).map(([k, v]) => `${k}: ${v}`).join(" · ");
-  const el = h("div", "mt-8 space-y-1 text-xs text-stone-500");
+  const el = h("div", "mt-8 space-y-1 text-xs text-muted");
   add(el, h("p", "", `Built ${r.built_utc.slice(0, 16).replace("T", " ")} UTC · ${src}`));
-  for (const n of r.notes) el.append(h("p", "text-amber-700", n));
+  for (const n of r.notes) el.append(h("p", "text-warn", n));
   return el;
 }
 
@@ -71,9 +71,9 @@ export function overview(r: Report): HTMLElement {
   el.append(k.el);
   if (r.profile.description) {
     const about = card("About");
-    add(about.body, h("p", "text-sm leading-relaxed text-stone-600", r.profile.description));
+    add(about.body, h("p", "text-sm leading-relaxed text-muted", r.profile.description));
     const facts = [r.profile.ceo && `CEO ${r.profile.ceo}`, r.profile.employees && `${Math.round(r.profile.employees).toLocaleString("en-US")} employees`, r.profile.country, r.profile.ipo_date && `listed ${shortDate(r.profile.ipo_date)}`].filter(Boolean);
-    if (facts.length) about.body.append(h("p", "mt-3 text-xs text-stone-500", facts.join(" · ")));
+    if (facts.length) about.body.append(h("p", "mt-3 text-xs text-muted", facts.join(" · ")));
     el.append(about.el);
   }
   return el;
@@ -81,22 +81,22 @@ export function overview(r: Report): HTMLElement {
 
 export function renderReading(body: HTMLElement, reading: Reading) {
   body.replaceChildren(
-    h("p", "font-serif text-xl leading-snug text-stone-900", reading.headline),
+    h("p", " text-xl leading-snug text-ink-strong", reading.headline),
     add(h("div", "mt-5 grid gap-5 sm:grid-cols-2"),
-      ...reading.sections.map((s) => add(h("div"), h("h4", "text-sm font-semibold text-stone-900", s.title), h("p", "mt-1 text-sm leading-relaxed text-stone-600", s.body)))),
+      ...reading.sections.map((s) => add(h("div"), h("h4", "text-sm font-semibold text-ink-strong", s.title), h("p", "mt-1 text-sm leading-relaxed text-muted", s.body)))),
     reading.points_to_check.length
-      ? add(h("div", "mt-5 rounded-xl bg-stone-50 p-4"), h("h4", "text-sm font-semibold text-stone-900", "Points to check"),
-          add(h("ul", "mt-2 list-disc space-y-1 pl-5 text-sm text-stone-600"), ...reading.points_to_check.map((p) => h("li", "", p))))
+      ? add(h("div", "mt-5 rounded-md bg-page p-4"), h("h4", "text-sm font-semibold text-ink-strong", "Points to check"),
+          add(h("ul", "mt-2 list-disc space-y-1 pl-5 text-sm text-muted"), ...reading.points_to_check.map((p) => h("li", "", p))))
       : "",
-    h("p", "mt-4 text-xs text-stone-400", `Written by ${reading.model} on ${reading.read_utc.slice(0, 16).replace("T", " ")} UTC from the numbers on this page. It describes them; it is not advice.`),
+    h("p", "mt-4 text-xs text-faint", `Written by ${reading.model} on ${reading.read_utc.slice(0, 16).replace("T", " ")} UTC from the numbers on this page. It describes them; it is not advice.`),
   );
 }
 
 export function readingCard(r: Report, path = `/api/stock/${encodeURIComponent(r.ticker)}/reading`): HTMLElement {
   const c = card("AI reading", "Claude reads the numbers computed on this page and says what they show. Descriptive only.");
-  const button = h("button", "rounded-xl bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-700", "Write the reading");
+  const button = h("button", "rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-strong", "Write the reading");
   button.type = "button";
-  const status = h("p", "mt-2 text-sm text-stone-500");
+  const status = h("p", "mt-2 text-sm text-muted");
   c.body.append(add(h("div"), button, status));
   const load = async (spend: boolean) => {
     button.disabled = true;
@@ -179,8 +179,8 @@ function table(periods: Period[], ratios: Ratios[]): HTMLElement {
       body.append(add(h("tr"), td));
       continue;
     }
-    body.append(add(h("tr"), h("td", "text-stone-700", row.label + (row.label === "Diluted shares" ? " (M)" : "")),
-      ...periods.map((p, i) => h("td", "text-stone-900", fmt(row.kind, row.get(p, ratios[i]) ?? null)))));
+    body.append(add(h("tr"), h("td", "text-ink", row.label + (row.label === "Diluted shares" ? " (M)" : "")),
+      ...periods.map((p, i) => h("td", "text-ink-strong", fmt(row.kind, row.get(p, ratios[i]) ?? null)))));
   }
   add(t, add(h("thead"), head), body);
   return add(wrap, t);
@@ -193,7 +193,7 @@ export function fundamentals(r: Report): HTMLElement {
   const draw = (kind: "annual" | "quarter") => {
     const periods = kind === "annual" ? r.annual : r.quarters;
     const ratios = kind === "annual" ? r.annual_ratios : r.quarter_ratios;
-    if (!periods.length) return content.replaceChildren(h("p", "text-sm text-stone-500", "No quarterly statements on the current data plan."));
+    if (!periods.length) return content.replaceChildren(h("p", "text-sm text-muted", "No quarterly statements on the current data plan."));
     const labels = periods.map(yearLabel);
     const scale = card("Revenue, net income and free cash flow");
     scale.body.append(barChart(labels, [
@@ -274,7 +274,7 @@ export function valuation(r: Report): HTMLElement {
   const path = card("Multiples through time", "At each fiscal year end, today (TTM), and at today's price on the consensus for the coming years (dashed)");
   const picker = h("div", "mb-3 flex flex-wrap gap-1");
   const chartBox = h("div");
-  const note = h("p", "mt-3 text-sm text-stone-600");
+  const note = h("p", "mt-3 text-sm text-muted");
   const draw = (key: MultipleKey) => {
     const hist = r.history.years;
     const labels = [...hist.map((y) => `FY${y.fiscal_year.slice(-2)}`), "Today"];
@@ -314,11 +314,11 @@ export function valuation(r: Report): HTMLElement {
 
   const fw = card("Consensus years", f ? f.note : undefined);
   if (!f) {
-    fw.body.append(h("p", "text-sm text-stone-500", (r.forward as { reason: string }).reason));
+    fw.body.append(h("p", "text-sm text-muted", (r.forward as { reason: string }).reason));
   } else {
     const t = h("table", "data-table");
     const cols = f.years;
-    const row = (label: string, cells: string[]) => add(h("tr"), h("td", "text-stone-700", label), ...cells.map((c) => h("td", "text-stone-900", c)));
+    const row = (label: string, cells: string[]) => add(h("tr"), h("td", "text-ink", label), ...cells.map((c) => h("td", "text-ink-strong", c)));
     add(t,
       add(h("thead"), add(h("tr"), h("th", "", ""), ...cols.map((y) => h("th", "", `FY${y.fiscal_year} (${shortDate(y.fiscal_year_end)})`)))),
       add(h("tbody"),
@@ -350,10 +350,10 @@ export function valuation(r: Report): HTMLElement {
 
 export function technical(r: Report): HTMLElement {
   const el = h("div", "grid min-w-0 gap-4");
-  if (!r.technical.available) return add(el, h("p", "text-sm text-stone-500", r.technical.reason));
+  if (!r.technical.available) return add(el, h("p", "text-sm text-muted", r.technical.reason));
   const { summary: s, levels, series } = r.technical;
   const chips = h("div", "flex flex-wrap gap-2");
-  const tone = { up: "bg-emerald-50 text-emerald-800 border-emerald-200", down: "bg-rose-50 text-rose-800 border-rose-200", warn: "bg-amber-50 text-amber-800 border-amber-200", neutral: "bg-stone-100 text-stone-700 border-stone-200" };
+  const tone = { up: "bg-up-soft text-up border-up/40", down: "bg-down-soft text-down border-down/40", warn: "bg-warn-soft text-warn border-warn/40", neutral: "bg-raised text-ink border-line" };
   for (const st of s.states) chips.append(h("span", `rounded-full border px-3 py-1 text-xs font-medium ${tone[st.tone]}`, st.label));
   const top = card("Where the indicators stand", `Close of ${shortDate(s.date)}. Descriptions of past price behaviour, not signals.`);
   top.body.append(chips);
@@ -381,10 +381,10 @@ export function technical(r: Report): HTMLElement {
   el.append(stats.el);
 
   const lv = card("Swing levels", "Prices where the stock turned in the last six months, grouped when within 1.5% of each other. More touches, more often the price turned there.");
-  const list = (title: string, items: typeof levels.supports) => add(h("div"), h("h4", "mb-2 text-sm font-semibold text-stone-900", title),
+  const list = (title: string, items: typeof levels.supports) => add(h("div"), h("h4", "mb-2 text-sm font-semibold text-ink-strong", title),
     items.length ? add(h("ul", "space-y-1 text-sm"), ...items.map((l) => add(h("li", "flex justify-between gap-4 tabular-nums"),
-      h("span", "font-medium text-stone-900", price(l.level)), h("span", "text-stone-500", `${signedPct(l.distance)} · ${l.touches} touch${l.touches > 1 ? "es" : ""}`))))
-      : h("p", "text-sm text-stone-500", "None in the last six months."));
+      h("span", "font-medium text-ink-strong", price(l.level)), h("span", "text-muted", `${signedPct(l.distance)} · ${l.touches} touch${l.touches > 1 ? "es" : ""}`))))
+      : h("p", "text-sm text-muted", "None in the last six months."));
   add(lv.body, add(h("div", "grid gap-6 sm:grid-cols-2"), list("Below the price", levels.supports), list("Above the price", levels.resistances)));
   el.append(lv.el);
   return el;

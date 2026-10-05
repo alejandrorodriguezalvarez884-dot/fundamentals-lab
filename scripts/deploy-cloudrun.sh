@@ -5,7 +5,10 @@
 # service scales to zero: it costs nothing while nobody uses it.
 #
 # Requirements: the gcloud CLI logged in on a project with billing enabled, and .env with
-# ANTHROPIC_API_KEY, FMP_API_KEY and SEC_USER_AGENT.
+# FMP_API_KEY and SEC_USER_AGENT. ANTHROPIC_API_KEY switches the AI reading on; without it the
+# secret already in Secret Manager is kept, and if there is none the reading stays off.
+# HUB_URL (the Market Hub address) admits only people signed in there: the service reads the
+# hub's session cookie with the hub's secret (Secret Manager: market-hub-session-secret).
 #
 # Optional overrides: GCP_PROJECT, GCP_REGION, SERVICE_NAME, MAX_INSTANCES, READING_DAILY_MAX_USD,
 # READING_TOTAL_MAX_USD, READING_MODEL.
@@ -39,7 +42,7 @@ env_value() { grep -E "^$1=" "$ENV_FILE" | tail -1 | cut -d= -f2- | sed -e 's/^"
 ANTHROPIC_KEY="$(env_value ANTHROPIC_API_KEY)"
 FMP_KEY="$(env_value FMP_API_KEY)"
 SEC_USER_AGENT="$(env_value SEC_USER_AGENT)"
-[[ -n "$ANTHROPIC_KEY" ]] || fail "ANTHROPIC_API_KEY is empty in $ENV_FILE."
+HUB_URL="$(env_value HUB_URL)"
 [[ -n "$FMP_KEY" ]] || fail "FMP_API_KEY is empty in $ENV_FILE."
 [[ "$SEC_USER_AGENT" == *@* ]] || fail "SEC_USER_AGENT in $ENV_FILE needs a contact email."
 
@@ -68,8 +71,27 @@ put_secret() {
     --member "serviceAccount:$SERVICE_ACCOUNT" --role roles/secretmanager.secretAccessor >/dev/null
 }
 echo "→ Secrets"
-put_secret fundamentals-lab-anthropic-api-key "$ANTHROPIC_KEY"
+SECRETS="FMP_API_KEY=fundamentals-lab-fmp-api-key:latest"
 put_secret fundamentals-lab-fmp-api-key "$FMP_KEY"
+if [[ -n "$ANTHROPIC_KEY" ]]; then
+  put_secret fundamentals-lab-anthropic-api-key "$ANTHROPIC_KEY"
+fi
+if gcp secrets describe fundamentals-lab-anthropic-api-key >/dev/null 2>&1; then
+  gcp secrets add-iam-policy-binding fundamentals-lab-anthropic-api-key \
+    --member "serviceAccount:$SERVICE_ACCOUNT" --role roles/secretmanager.secretAccessor >/dev/null
+  SECRETS="$SECRETS,ANTHROPIC_API_KEY=fundamentals-lab-anthropic-api-key:latest"
+else
+  echo "note: no Anthropic key anywhere: the AI reading stays off."
+fi
+HUB_ENV=""
+if [[ -n "$HUB_URL" ]]; then
+  gcp secrets describe market-hub-session-secret >/dev/null 2>&1 || fail "HUB_URL is set but Market Hub's secret market-hub-session-secret does not exist. Deploy the hub first."
+  gcp secrets add-iam-policy-binding market-hub-session-secret \
+    --member "serviceAccount:$SERVICE_ACCOUNT" --role roles/secretmanager.secretAccessor >/dev/null
+  SECRETS="$SECRETS,HUB_SESSION_SECRET=market-hub-session-secret:latest"
+  HUB_ENV="|HUB_URL=$HUB_URL"
+  echo "→ Behind Market Hub's sign-in ($HUB_URL)"
+fi
 
 echo "→ Bucket gs://$BUCKET"
 if ! gcp storage buckets describe "gs://$BUCKET" >/dev/null 2>&1; then
@@ -91,11 +113,11 @@ gcp run deploy "$SERVICE_NAME" \
   --min-instances 0 \
   --max-instances "$MAX_INSTANCES" \
   --timeout 120 \
-  --set-secrets "ANTHROPIC_API_KEY=fundamentals-lab-anthropic-api-key:latest,FMP_API_KEY=fundamentals-lab-fmp-api-key:latest" \
-  --set-env-vars "^|^SEC_USER_AGENT=$SEC_USER_AGENT|FUNDAMENTALS_BUCKET=$BUCKET|READING_DAILY_MAX_USD=$READING_DAILY_MAX_USD|READING_TOTAL_MAX_USD=$READING_TOTAL_MAX_USD|READING_MODEL=$READING_MODEL"
+  --set-secrets "$SECRETS" \
+  --set-env-vars "^|^SEC_USER_AGENT=$SEC_USER_AGENT|FUNDAMENTALS_BUCKET=$BUCKET|READING_DAILY_MAX_USD=$READING_DAILY_MAX_USD|READING_TOTAL_MAX_USD=$READING_TOTAL_MAX_USD|READING_MODEL=$READING_MODEL$HUB_ENV"
 
 URL="$(gcp run services describe "$SERVICE_NAME" --region "$GCP_REGION" --format 'value(status.url)')"
-if curl -fsS "$URL/api/health" >/dev/null; then
+if curl -fsS "$URL/api/health" >/dev/null 2>&1; then
   echo "✓ Deployed: $URL"
 else
   fail "Deployed, but $URL/api/health failed. Logs: gcloud run services logs read $SERVICE_NAME --region $GCP_REGION"

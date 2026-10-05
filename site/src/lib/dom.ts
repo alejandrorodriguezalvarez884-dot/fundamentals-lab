@@ -20,9 +20,9 @@ export function svg<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<
 
 // A titled card: the building block of every section.
 export function card(title: string, subtitle?: string, cls = ""): { el: HTMLElement; body: HTMLElement } {
-  const el = h("section", `min-w-0 rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 ${cls}`);
-  const head = add(h("header", "mb-4"), h("h3", "font-serif text-lg font-semibold text-stone-900", title));
-  if (subtitle) head.append(h("p", "mt-1 text-sm text-stone-500", subtitle));
+  const el = h("section", `min-w-0 rounded-md border border-line bg-panel p-4 sm:p-6 ${cls}`);
+  const head = add(h("header", "mb-4"), h("h3", " text-lg font-semibold text-ink-strong", title));
+  if (subtitle) head.append(h("p", "mt-1 text-sm text-muted", subtitle));
   const body = h("div");
   add(el, head, body);
   return { el, body };
@@ -30,12 +30,12 @@ export function card(title: string, subtitle?: string, cls = ""): { el: HTMLElem
 
 // A small figure: label above, value below.
 export function stat(label: string, value: string, note?: string, tone: "up" | "down" | "" = ""): HTMLElement {
-  const color = tone === "up" ? "text-emerald-700" : tone === "down" ? "text-rose-700" : "text-stone-900";
+  const color = tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-ink-strong";
   return add(
     h("div", "min-w-0"),
-    h("div", "text-xs font-medium uppercase tracking-wide text-stone-500", label),
+    h("div", "text-xs font-medium uppercase tracking-wide text-muted", label),
     h("div", `mt-1 text-xl font-semibold tabular-nums ${color}`, value),
-    note ? h("div", "mt-0.5 text-xs text-stone-500", note) : null,
+    note ? h("div", "mt-0.5 text-xs text-muted", note) : null,
   );
 }
 

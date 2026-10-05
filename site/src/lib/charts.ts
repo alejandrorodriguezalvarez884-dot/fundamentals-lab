@@ -1,12 +1,12 @@
 // Small SVG charts (bars by period, lines with a dashed forecast part, a labelled scatter), with
-// a hover tooltip. Light theme only, like the rest of the site.
+// a hover tooltip. Dark theme, like the rest of the site.
 import { add, h, svg } from "./dom";
 import { fmt, type Kind } from "./format";
 
 // Categorical slots in fixed order (validated palette from the dataviz reference).
 export const SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4"];
-const GRID = "#e7e5e4";
-const AXIS_TEXT = "#78716c";
+const GRID = "#2a2e39";
+const AXIS_TEXT = "#868993";
 
 export type BarSeries = { name: string; values: (number | null)[]; color?: string };
 export type LineSeries = {
@@ -60,7 +60,7 @@ function frame(): { root: HTMLElement; plot: SVGSVGElement; tip: HTMLElement } {
 }
 
 function legend(items: { name: string; color: string; dashed?: boolean }[]): HTMLElement {
-  const el = h("div", "mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-600");
+  const el = h("div", "mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted");
   for (const it of items) {
     const sw = h("span", "inline-block h-[3px] w-4 rounded-full align-middle");
     sw.style.background = it.dashed ? `repeating-linear-gradient(90deg, ${it.color} 0 4px, transparent 4px 7px)` : it.color;
@@ -72,7 +72,7 @@ function legend(items: { name: string; color: string; dashed?: boolean }[]): HTM
 function yAxis(plot: SVGSVGElement, ticks: number[], y: (v: number) => number, kind: Kind) {
   for (const t of ticks) {
     const yy = y(t);
-    plot.append(svg("line", { x1: FRAME.left, x2: FRAME.width - FRAME.right, y1: yy, y2: yy, stroke: t === 0 ? "#a8a29e" : GRID, "stroke-width": 1 }));
+    plot.append(svg("line", { x1: FRAME.left, x2: FRAME.width - FRAME.right, y1: yy, y2: yy, stroke: t === 0 ? "#5d606b" : GRID, "stroke-width": 1 }));
     const label = svg("text", { x: FRAME.left - 8, y: yy + 4, "text-anchor": "end", "font-size": 11, fill: AXIS_TEXT });
     label.textContent = fmt(kind, t);
     plot.append(label);
@@ -110,14 +110,14 @@ function tooltip(plot: SVGSVGElement, tip: HTMLElement, n: number, x: (i: number
 
 function tipRow(name: string, value: string, color?: string): HTMLElement {
   const row = h("div", "flex items-center justify-between gap-4");
-  const left = h("span", "inline-flex items-center gap-1.5 text-stone-600");
+  const left = h("span", "inline-flex items-center gap-1.5 text-muted");
   if (color) {
     const dot = h("span", "inline-block h-2 w-2 rounded-full");
     dot.style.background = color;
     left.append(dot);
   }
   left.append(name);
-  return add(row, left, h("span", "font-semibold tabular-nums text-stone-900", value));
+  return add(row, left, h("span", "font-semibold tabular-nums text-ink-strong", value));
 }
 
 // Grouped bars: one group per period, one bar per series.
@@ -127,7 +127,7 @@ export const barChart = (labels: string[], series: BarSeries[], kind: Kind = "mo
 function drawBars(labels: string[], series: BarSeries[], kind: Kind): HTMLElement {
   const { root, plot, tip } = frame();
   const all = series.flatMap((s) => s.values).filter((v): v is number => v !== null);
-  if (!all.length) return h("p", "text-sm text-stone-500", "No data.");
+  if (!all.length) return h("p", "text-sm text-muted", "No data.");
   const ticks = niceTicks(Math.min(0, ...all), Math.max(0, ...all));
   const lo = ticks[0], hi = ticks[ticks.length - 1];
   const innerH = FRAME.height - FRAME.top - FRAME.bottom;
@@ -155,7 +155,7 @@ function drawBars(labels: string[], series: BarSeries[], kind: Kind): HTMLElemen
   });
   xLabels(plot, labels, x);
   tooltip(plot, tip, labels.length, x, (i) => [
-    h("div", "mb-1 font-medium text-stone-900", labels[i]),
+    h("div", "mb-1 font-medium text-ink-strong", labels[i]),
     ...series.map((s, k) => tipRow(s.name, fmt(kind, s.values[i]), s.color ?? SERIES[k])),
   ]);
   return add(h("div"), series.length > 1 ? legend(series.map((s, k) => ({ name: s.name, color: s.color ?? SERIES[k] }))) : null, root);
@@ -170,7 +170,7 @@ function drawLines(labels: string[], series: LineSeries[], kind: Kind, reference
   const { root, plot, tip } = frame();
   const all = series.flatMap((s) => s.values).filter((v): v is number => v !== null);
   if (reference) all.push(reference.value);
-  if (!all.length) return h("p", "text-sm text-stone-500", "No data.");
+  if (!all.length) return h("p", "text-sm text-muted", "No data.");
   const minV = Math.min(...all), maxV = Math.max(...all);
   const pad = (maxV - minV) * 0.08 || Math.abs(maxV) * 0.1 || 1;
   const ticks = niceTicks(kind === "mult" ? Math.max(0, minV - pad) : minV - pad, maxV + pad);
@@ -182,8 +182,8 @@ function drawLines(labels: string[], series: LineSeries[], kind: Kind, reference
   yAxis(plot, ticks, y, kind);
   if (reference) {
     const yy = y(reference.value);
-    plot.append(svg("line", { x1: FRAME.left, x2: FRAME.width - FRAME.right, y1: yy, y2: yy, stroke: "#57534e", "stroke-width": 1, "stroke-dasharray": "2 3" }));
-    const t = svg("text", { x: FRAME.left + 6, y: yy - 6, "text-anchor": "start", "font-size": 11, fill: "#57534e", "paint-order": "stroke", stroke: "#fff", "stroke-width": 3 });
+    plot.append(svg("line", { x1: FRAME.left, x2: FRAME.width - FRAME.right, y1: yy, y2: yy, stroke: "#868993", "stroke-width": 1, "stroke-dasharray": "2 3" }));
+    const t = svg("text", { x: FRAME.left + 6, y: yy - 6, "text-anchor": "start", "font-size": 11, fill: "#d1d4dc", "paint-order": "stroke", stroke: "#1e222d", "stroke-width": 3 });
     t.textContent = `${reference.label} ${fmt(kind, reference.value)}`;
     plot.append(t);
   }
@@ -208,7 +208,7 @@ function drawLines(labels: string[], series: LineSeries[], kind: Kind, reference
     }
     const dots: SVGCircleElement[] = [];
     s.values.forEach((v, i) => {
-      const c = svg("circle", { cx: x(i), cy: v === null ? -100 : y(v), r: 4, fill: s.dashedFrom !== undefined && i > s.dashedFrom ? "#fff" : color, stroke: color, "stroke-width": 2 });
+      const c = svg("circle", { cx: x(i), cy: v === null ? -100 : y(v), r: 4, fill: s.dashedFrom !== undefined && i > s.dashedFrom ? "#1e222d" : color, stroke: color, "stroke-width": 2 });
       c.style.opacity = labels.length <= 16 ? "1" : "0";
       if (v === null) c.style.display = "none";
       plot.append(c);
@@ -217,11 +217,11 @@ function drawLines(labels: string[], series: LineSeries[], kind: Kind, reference
     markers.push(dots);
   });
   xLabels(plot, labels, x);
-  const cross = svg("line", { y1: FRAME.top, y2: FRAME.height - FRAME.bottom, stroke: "#a8a29e", "stroke-width": 1 });
+  const cross = svg("line", { y1: FRAME.top, y2: FRAME.height - FRAME.bottom, stroke: "#5d606b", "stroke-width": 1 });
   cross.style.display = "none";
   plot.append(cross);
   tooltip(plot, tip, labels.length, x, (i) => [
-    h("div", "mb-1 font-medium text-stone-900", labels[i]),
+    h("div", "mb-1 font-medium text-ink-strong", labels[i]),
     ...series.map((s, k) => tipRow(s.dashedFrom !== undefined && i > s.dashedFrom ? `${s.name} (consensus)` : s.name, fmt(kind, s.values[i]), s.color ?? SERIES[k])),
   ], (i) => {
     cross.style.display = i === null ? "none" : "";
@@ -230,7 +230,7 @@ function drawLines(labels: string[], series: LineSeries[], kind: Kind, reference
   });
   const items = series.map((s, k) => ({ name: s.name, color: s.color ?? SERIES[k] }));
   const dashedNote = series.some((s) => s.dashedFrom !== undefined)
-    ? [{ name: "Analysts' consensus at today's price", color: "#57534e", dashed: true }]
+    ? [{ name: "Analysts' consensus at today's price", color: "#868993", dashed: true }]
     : [];
   return add(h("div"), items.length > 1 || dashedNote.length ? legend([...(items.length > 1 ? items : []), ...dashedNote]) : null, root);
 }
@@ -243,7 +243,7 @@ export const scatter = (points: { label: string; x: number | null; y: number | n
 function drawScatter(points: { label: string; x: number | null; y: number | null; color: string }[],
                         xName: string, yName: string, xKind: Kind, yKind: Kind): HTMLElement {
   const ok = points.filter((p) => p.x !== null && p.y !== null) as { label: string; x: number; y: number; color: string }[];
-  if (ok.length < 2) return h("p", "text-sm text-stone-500", "Not enough data for this chart.");
+  if (ok.length < 2) return h("p", "text-sm text-muted", "Not enough data for this chart.");
   const { root, plot, tip } = frame();
   const xs = ok.map((p) => p.x), ys = ok.map((p) => p.y);
   const padX = (Math.max(...xs) - Math.min(...xs)) * 0.15 || 0.05;
@@ -259,18 +259,18 @@ function drawScatter(points: { label: string; x: number | null; y: number | null
     label.textContent = fmt(xKind, t);
     plot.append(label);
   }
-  const xl = svg("text", { x: FRAME.left + innerW / 2, y: FRAME.height - 4, "text-anchor": "middle", "font-size": 11, fill: "#57534e" });
+  const xl = svg("text", { x: FRAME.left + innerW / 2, y: FRAME.height - 4, "text-anchor": "middle", "font-size": 11, fill: "#868993" });
   xl.textContent = xName;
   plot.append(xl);
   for (const p of ok) {
     const g = svg("g");
-    g.append(svg("circle", { cx: x(p.x), cy: y(p.y), r: 6, fill: p.color, stroke: "#fff", "stroke-width": 2 }));
-    const t = svg("text", { x: x(p.x) + 10, y: y(p.y) + 4, "font-size": 12, "font-weight": 600, fill: "#292524" });
+    g.append(svg("circle", { cx: x(p.x), cy: y(p.y), r: 6, fill: p.color, stroke: "#1e222d", "stroke-width": 2 }));
+    const t = svg("text", { x: x(p.x) + 10, y: y(p.y) + 4, "font-size": 12, "font-weight": 600, fill: "#f0f3fa" });
     t.textContent = p.label;
     g.append(t);
     const hit = svg("circle", { cx: x(p.x), cy: y(p.y), r: 16, fill: "transparent" });
     hit.addEventListener("pointerenter", () => {
-      tip.replaceChildren(h("div", "mb-1 font-medium text-stone-900", p.label), tipRow(xName, fmt(xKind, p.x)), tipRow(yName, fmt(yKind, p.y)));
+      tip.replaceChildren(h("div", "mb-1 font-medium text-ink-strong", p.label), tipRow(xName, fmt(xKind, p.x)), tipRow(yName, fmt(yKind, p.y)));
       tip.hidden = false;
       tip.style.left = `${(x(p.x) / FRAME.width) * plot.getBoundingClientRect().width}px`;
     });
@@ -278,5 +278,5 @@ function drawScatter(points: { label: string; x: number | null; y: number | null
     g.append(hit);
     plot.append(g);
   }
-  return add(h("div"), h("div", "mb-2 text-xs text-stone-500", yName), root);
+  return add(h("div"), h("div", "mb-2 text-xs text-muted", yName), root);
 }

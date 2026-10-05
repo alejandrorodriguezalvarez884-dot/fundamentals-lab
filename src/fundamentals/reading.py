@@ -77,6 +77,10 @@ class ReadingRefused(Exception):
     pass
 
 
+class ReadingUnavailable(Exception):
+    """No Anthropic key on this deployment: the AI reading is off, everything else works."""
+
+
 def _today() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
@@ -96,6 +100,8 @@ class Reader:
     @property
     def client(self) -> anthropic.Anthropic:
         if self._client is None:
+            if not os.environ.get("ANTHROPIC_API_KEY", "").strip():
+                raise ReadingUnavailable()
             # The key is the owner's ANTHROPIC_API_KEY. The base URL is pinned so a stray
             # ANTHROPIC_BASE_URL in the shell (a dev proxy, say) never receives it.
             self._client = anthropic.Anthropic(base_url=os.environ.get("READING_BASE_URL", "https://api.anthropic.com"))

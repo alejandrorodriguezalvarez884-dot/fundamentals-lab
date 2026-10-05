@@ -9,6 +9,7 @@ dependencies = [
     "fastapi>=0.142.2",
     "google-cloud-storage>=3.16.0",
     "httpx>=0.28.1",
+    "itsdangerous>=2.2.0",
     "python-dotenv>=1.2.4",
     "uvicorn>=0.54.0",
 ]

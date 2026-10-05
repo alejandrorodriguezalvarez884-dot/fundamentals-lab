@@ -2,6 +2,7 @@
 // Shell shared by every page: header with the navigation, the page body and the footer.
 import Layout from "../layouts/Layout.astro";
 import { AUTHOR_URL, REPO_URL, SITE_NAME, link } from "../lib/site";
+import HubBar from "./HubBar.astro";
 
 interface Props {
 	title: string;
@@ -17,23 +18,23 @@ const links = [
 	{ href: link("/compare/"), label: "Compare", active: under("/compare/") },
 	{ href: link("/method/"), label: "Method", active: under("/method/") },
 ];
-const width = wide ? "max-w-6xl" : "max-w-5xl";
+const width = wide ? "max-w-[1280px]" : "max-w-6xl";
 ---
 
 <Layout title={title === SITE_NAME ? title : `${title} — ${SITE_NAME}`} description={description}>
-	<header class="sticky top-0 z-50 border-b border-stone-200/80 bg-stone-50/85 backdrop-blur">
-		<nav class={`mx-auto flex ${width} items-center justify-between gap-4 px-4 py-3 sm:px-6`}>
-			<a href={link("/")} class="flex flex-none items-center gap-2 whitespace-nowrap font-serif text-base font-semibold tracking-tight text-stone-900 sm:text-lg">
-				<img src={link("/favicon.svg")} alt="" class="h-6 w-6" />{SITE_NAME}
+	<header class="sticky top-0 z-50 border-b border-line bg-page/95 backdrop-blur">
+		<nav class={`mx-auto flex h-14 ${width} items-center gap-3 px-4 sm:gap-6`}>
+			<a href={link("/")} class="flex flex-none items-center gap-2 whitespace-nowrap text-[15px] font-bold tracking-tight text-ink-strong">
+				<img src={link("/favicon.svg")} alt="" class="h-7 w-7" /><span class="hidden sm:inline">{SITE_NAME}</span>
 			</a>
-			<ul class="flex items-center gap-0.5 text-sm sm:gap-1">
+			<ul class="flex items-center gap-0.5 text-[13px] font-semibold sm:gap-1">
 				{
 					links.map((l) => (
 						<li>
 							<a
 								href={l.href}
 								aria-current={l.active ? "page" : undefined}
-								class={`whitespace-nowrap rounded-full px-2.5 py-1.5 sm:px-3 transition-colors hover:text-stone-900 ${l.active ? "bg-stone-200/70 font-medium text-stone-900" : "text-stone-600"}`}
+								class={`whitespace-nowrap rounded px-2.5 py-2 transition-colors hover:bg-raised hover:text-ink-strong sm:px-3 ${l.active ? "text-ink-strong" : "text-muted"}`}
 							>
 								{l.label}
 							</a>
@@ -41,96 +42,23 @@ const width = wide ? "max-w-6xl" : "max-w-5xl";
 					))
 				}
 			</ul>
+			<div class="ml-auto"><HubBar /></div>
 		</nav>
 	</header>
-	<main class={`mx-auto ${width} px-4 pb-20 pt-8 sm:px-6 sm:pt-12`}>
+	<main class={`mx-auto ${width} px-4 pb-16 pt-6 sm:pt-8`}>
 		<slot />
-		<p class="mt-16 border-t border-stone-200 pt-6 text-xs leading-relaxed text-stone-500">
+		<p class="mt-14 border-t border-line pt-5 text-xs leading-relaxed text-muted">
 			Figures computed from company filings, market prices and the analysts' consensus as published by the data
 			provider. Forward multiples are that consensus at today's price, not a forecast. Nothing on this site is
 			investment advice or a recommendation to buy or sell any security. Data may be delayed or contain errors.{" "}
-			<a href={link("/method/")} class="underline hover:text-stone-900">Sources and formulas</a>.
+			<a href={link("/method/")} class="underline hover:text-ink-strong">Sources and formulas</a>.
 		</p>
 	</main>
-	<footer class="border-t border-stone-200">
-		<div class={`mx-auto ${width} px-4 py-8 text-center text-sm text-stone-400 sm:px-6`}>
-			Built by <a href={AUTHOR_URL} class="underline hover:text-stone-700">Alejandro Rodríguez Álvarez</a> ·{" "}
-			<a href={REPO_URL} class="underline hover:text-stone-700">Source on GitHub</a>
+	<footer class="border-t border-line bg-deep">
+		<div class={`mx-auto ${width} flex flex-wrap justify-center gap-x-4 gap-y-1 px-4 py-8 text-xs text-muted`}>
+			<span>Part of Market Hub</span>
+			<a href={AUTHOR_URL} class="hover:text-ink">Built by Alejandro Rodríguez Álvarez</a>
+			<a href={REPO_URL} class="hover:text-ink">Source on GitHub</a>
 		</div>
 	</footer>
 </Layout>
-
-<style is:global>
-	.font-serif {
-		font-family: "Source Serif 4", Georgia, serif;
-	}
-	.chart-tip {
-		position: absolute;
-		top: 0;
-		transform: translate(-50%, -8px);
-		min-width: 140px;
-		padding: 8px 10px;
-		border-radius: 10px;
-		border: 1px solid #e7e5e4;
-		background: #fff;
-		box-shadow: 0 8px 24px rgba(28, 25, 23, 0.12);
-		font-size: 12px;
-		pointer-events: none;
-		z-index: 10;
-	}
-	.chart-tip[hidden] {
-		display: none;
-	}
-	.range-btn,
-	.tab-btn {
-		border-radius: 9999px;
-		padding: 4px 10px;
-		font-size: 12px;
-		font-weight: 500;
-		color: #57534e;
-		transition: background 0.15s;
-	}
-	.range-btn:hover,
-	.tab-btn:hover {
-		background: #f5f5f4;
-	}
-	.range-btn[aria-pressed="true"],
-	.tab-btn[aria-selected="true"] {
-		background: #1c1917;
-		color: #fff;
-	}
-	.data-table {
-		width: 100%;
-		font-size: 13px;
-		font-variant-numeric: tabular-nums;
-	}
-	.data-table th,
-	.data-table td {
-		padding: 6px 10px;
-		white-space: nowrap;
-		text-align: right;
-	}
-	.data-table th:first-child,
-	.data-table td:first-child {
-		text-align: left;
-		position: sticky;
-		left: 0;
-		background: #fff;
-	}
-	.data-table thead th {
-		font-weight: 500;
-		color: #78716c;
-		border-bottom: 1px solid #e7e5e4;
-	}
-	.data-table tbody tr + tr td {
-		border-top: 1px solid #f5f5f4;
-	}
-	.data-table td.group {
-		padding-top: 14px;
-		font-size: 11px;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-		color: #a8a29e;
-	}
-</style>

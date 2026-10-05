@@ -128,3 +128,13 @@ def test_api_reports_spending_limit(directory, store):
     response = TestClient(app).get("/api/stock/AAPL/reading")
     assert response.status_code == 429
     assert "spending limit" in response.json()["detail"]
+
+
+def test_without_a_key_the_reading_is_off_and_says_so(directory, store, monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    app = create_app(store=store, directory=directory, reporter=Reporter(store, FakeFmp()),
+                     reader=Reader(store, Budget(store, 1.0, 5.0, 0.15)), hub=None)
+    client = TestClient(app)
+    assert client.get("/api/stock/AAPL").status_code == 200
+    response = client.get("/api/stock/AAPL/reading")
+    assert response.status_code == 503 and "not switched on" in response.json()["detail"]

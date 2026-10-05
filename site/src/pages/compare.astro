@@ -5,8 +5,8 @@ import Search from "../components/Search.astro";
 ---
 
 <Page title="Compare" description="Compare up to five US-listed companies: fundamentals, valuation, forward multiples and price performance side by side." wide>
-	<h1 class="font-serif text-3xl font-semibold tracking-tight text-stone-900">Compare companies</h1>
-	<p class="mt-2 text-stone-600">Add two to five companies by ticker or name.</p>
+	<h1 class="text-3xl font-semibold tracking-tight text-ink-strong">Compare companies</h1>
+	<p class="mt-2 text-muted">Add two to five companies by ticker or name.</p>
 	<div class="mt-5 flex flex-col gap-3 lg:flex-row lg:items-start">
 		<div class="w-full max-w-md"><Search mode="pick" button="Add" id="pick" /></div>
 		<div id="chips" class="flex flex-wrap gap-2 lg:pt-2"></div>
@@ -37,10 +37,10 @@ import Search from "../components/Search.astro";
 
 	function drawChips() {
 		chips.replaceChildren(...tickers.map((t, k) => {
-			const chip = h("span", "inline-flex items-center gap-2 rounded-full border border-stone-300 bg-white py-1 pl-3 pr-1 text-sm font-semibold text-stone-800");
+			const chip = h("span", "inline-flex items-center gap-2 rounded-full border border-line-strong bg-panel py-1 pl-3 pr-1 text-sm font-semibold text-ink");
 			const dot = h("span", "inline-block h-2.5 w-2.5 rounded-full");
 			dot.style.background = SERIES[k];
-			const x = h("button", "rounded-full px-2 text-stone-400 hover:bg-stone-100 hover:text-stone-800", "×");
+			const x = h("button", "rounded-full px-2 text-faint hover:bg-raised hover:text-ink", "×");
 			x.type = "button";
 			x.setAttribute("aria-label", `Remove ${t}`);
 			x.addEventListener("click", () => setTickers(tickers.filter((u) => u !== t)));
@@ -64,9 +64,9 @@ import Search from "../components/Search.astro";
 
 	function readingCard(): HTMLElement {
 		const c = card("AI reading of the comparison", "Claude compares the numbers in the table. It names highest and lowest; it does not pick a winner.");
-		const button = h("button", "rounded-xl bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-700", "Write the reading");
+		const button = h("button", "rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-strong", "Write the reading");
 		button.type = "button";
-		const status = h("p", "mt-2 text-sm text-stone-500");
+		const status = h("p", "mt-2 text-sm text-muted");
 		c.body.append(add(h("div"), button, status));
 		const go = async (spend: boolean) => {
 			button.disabled = true;
@@ -90,25 +90,25 @@ import Search from "../components/Search.astro";
 	function draw(r: Comparison) {
 		const el = h("div", "grid min-w-0 gap-4");
 		const perf = card("Price, rebased to 100", `Last year of daily closes, from ${r.prices.dates[0] ?? "—"}`);
-		perf.body.append(r.prices.dates.length ? compareChart(r.prices.dates, r.prices.series, r.tickers) : h("p", "text-sm text-stone-500", "No common price history."));
+		perf.body.append(r.prices.dates.length ? compareChart(r.prices.dates, r.prices.series, r.tickers) : h("p", "text-sm text-muted", "No common price history."));
 
 		const tableCard = card("Side by side", "Highest and lowest value in each row are marked ▲ and ▼; neither means better.");
 		const t = h("table", "data-table");
 		const head = add(h("tr"), h("th", "", ""), ...r.companies.map((c, k) => {
 			const th = h("th", "");
-			const a = h("a", "inline-flex items-center gap-1.5 font-semibold text-stone-900 hover:underline", c.ticker) as HTMLAnchorElement;
+			const a = h("a", "inline-flex items-center gap-1.5 font-semibold text-ink-strong hover:underline", c.ticker) as HTMLAnchorElement;
 			a.href = stockUrl(c.ticker);
 			const dot = h("span", "inline-block h-2 w-2 rounded-full");
 			dot.style.background = SERIES[k];
 			a.prepend(dot);
-			return add(th, a, h("div", "max-w-[10rem] truncate text-[11px] font-normal text-stone-400", tidyName(c.name)));
+			return add(th, a, h("div", "max-w-[10rem] truncate text-[11px] font-normal text-faint", tidyName(c.name)));
 		}));
 		const body = h("tbody");
 		for (const row of r.table) {
 			const kind = kindOf(row.key);
-			body.append(add(h("tr"), h("td", "text-stone-700", row.label), ...row.values.map((v) => {
+			body.append(add(h("tr"), h("td", "text-ink", row.label), ...row.values.map((v) => {
 				const mark = v != null && row.highest !== row.lowest ? (v === row.highest ? " ▲" : v === row.lowest ? " ▼" : "") : "";
-				return add(h("td", "text-stone-900", fmt(kind, v ?? null)), mark ? h("span", "ml-1 text-[10px] text-stone-400", mark.trim()) : "");
+				return add(h("td", "text-ink-strong", fmt(kind, v ?? null)), mark ? h("span", "ml-1 text-[10px] text-faint", mark.trim()) : "");
 			})));
 		}
 		add(t, add(h("thead"), head), body);
@@ -127,17 +127,17 @@ import Search from "../components/Search.astro";
 	async function load() {
 		const mine = ++seq;
 		if (tickers.length < 2) {
-			root.replaceChildren(h("p", "text-stone-600", tickers.length ? "Add at least one more company." : "Start by adding a company."));
+			root.replaceChildren(h("p", "text-muted", tickers.length ? "Add at least one more company." : "Start by adding a company."));
 			return;
 		}
-		root.replaceChildren(h("p", "animate-pulse text-sm text-stone-500", `Building the reports for ${tickers.join(", ")}…`));
+		root.replaceChildren(h("p", "animate-pulse text-sm text-muted", `Building the reports for ${tickers.join(", ")}…`));
 		try {
 			const res = await fetch(`${API}/api/compare?tickers=${tickers.map(encodeURIComponent).join(",")}`);
 			const body = await res.json();
 			if (!res.ok) throw new Error(body.detail ?? "The comparison failed.");
 			if (mine === seq) draw(body as Comparison);
 		} catch (e) {
-			if (mine === seq) root.replaceChildren(h("p", "rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800", e instanceof Error ? e.message : "The comparison failed."));
+			if (mine === seq) root.replaceChildren(h("p", "rounded-md border border-down/40 bg-down-soft p-4 text-sm text-down", e instanceof Error ? e.message : "The comparison failed."));
 		}
 	}
 

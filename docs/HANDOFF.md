@@ -28,13 +28,13 @@ Decisiones del usuario ese día:
 | Hecho | Pendiente |
 |---|---|
 | Backend en `src/fundamentals/`: FMP (`fmp.py`), SEC (`sec.py`, buscador y estados anuales de respaldo), ratios y múltiplos (`metrics.py`), múltiplos futuros (`forward.py`), técnico (`technical.py`), informe (`report.py`), comparador (`compare.py`), lectura con Claude (`reading.py`), topes (`budget.py`), API (`api.py`), CLI (`cli.py`) | **Nada se ha probado contra las APIs reales**: la red del entorno donde se escribió bloqueaba FMP y la SEC |
-| 40 tests en verde, sin red (datos sintéticos y respuestas con la forma de FMP y de la SEC) | Confirmar con respuestas reales los nombres de campo de FMP (`fmp.py` acepta varios nombres por campo, pero no se han visto respuestas reales) |
+| 45 tests en verde, sin red (datos sintéticos y respuestas con la forma de FMP y de la SEC) | Confirmar con respuestas reales los nombres de campo de FMP (`fmp.py` acepta varios nombres por campo, pero no se han visto respuestas reales) |
 | Web Astro (`site/`): portada con buscador, ficha de acción con 4 pestañas (Overview con lectura IA, Fundamentals, Valuation & forward, Technical), comparador y Method. Revisada en Chromium a 1280 y 390 px con datos sintéticos: sin desbordes, sin errores de consola | Revisarla con datos reales |
 | Lectura con IA: `claude-opus-5-5`, esfuerzo `low`, salida JSON con esquema, `fallbacks: "default"`. Se guarda por día y por empresa; abrir una página nunca gasta | **Ninguna llamada real a Claude todavía.** La clave de Anthropic está en `.env` y responde (listado de modelos, gratis) |
-| `Makefile`, `Dockerfile`, `scripts/deploy-cloudrun.sh` (dos secretos, bucket, topes por variable de entorno) | No desplegado. Falta `FMP_API_KEY` y `SEC_USER_AGENT` en `.env` |
+| `Makefile`, `Dockerfile`, `scripts/deploy-cloudrun.sh` (secretos, bucket, topes por variable de entorno). La clave de Anthropic sale del secreto `ANTHROPIC_API_KEY` de Secret Manager (`ANTHROPIC_SECRET`); sin clave, la lectura responde que está apagada | **Desplegado el 2026-10-05** como servicio `fundamentals-lab` (europe-west1), para `fundamentals.themarkethub.app` |
 | Repo público en GitHub: `alejandrorodriguezalvarez884-dot/fundamentals-lab`, creado por el usuario el 2026-10-05; código subido a `main` | |
 | | Que el usuario confirme los topes por defecto ($0.50 al día, $5 en total, $0.15 por petición) y el modelo |
-| | Dominio propio (como `earningsradar.app`) y tarjeta en la web personal |
+| **Dentro de Market Hub (2026-10-05)**: estilo nuevo (tema oscuro de Market Hub, `HubBar.astro` en la cabecera) y login obligatorio a través del hub: con `HUB_URL` y `HUB_SESSION_SECRET`, `src/fundamentals/hubauth.py` solo deja pasar a quien tenga la cookie `mh_session` del hub firmada con su secreto; sin sesión, las páginas van al login del hub y la API responde 401. Sin límite por IP detrás del login (decisión del usuario); los topes de la lectura siguen | Probar con datos reales de FMP y la primera lectura real con Claude |
 
 ### Coste estimado de la lectura con IA
 

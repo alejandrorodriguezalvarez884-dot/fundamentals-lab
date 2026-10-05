@@ -50,6 +50,19 @@ login y la lectura con IA.
 cuando el plan rechaza más (`BASIC_PLAN_PERIODS`, `period_cap`) y el informe lo dice en una nota.
 47 tests en verde; con la clave real solo se comprobó `income-statement` con `limit=5`.
 
+### Diseño del portal y cabecera compartida (2026-10-05, noche; desplegado como `fundamentals-lab-00004-zkt`)
+
+La herramienta pasa a ser una sección de Market Hub. `site/src/styles/global.css` es el del portal
+(más los estilos propios al final), con su tipografía y su regla de color: verde y rojo solo para
+subidas y bajadas; las series de los gráficos usan colores que nombran la serie (`SERIES` en
+`lib/charts.ts`). `components/Page.astro` lleva la cabecera del portal (`Markets · Fundamentals ·
+Earnings`, buscador, cuenta) y debajo las páginas de la herramienta. La ficha de empresa tiene
+las pestañas `Price · Fundamentals · Results release` (`companyTabs` en `lib/dom.ts`), que llevan
+a la misma empresa en el portal y en el radar (`HUB_URL`, `RADAR_URL` en `lib/site.ts`). Las
+secciones ya no son cajas (`card()` dibuja una regla y un título). 47 tests y `astro check` en
+verde; revisado en local con el informe de AAPL guardado. El gráfico técnico se puede ver en velas o
+en línea. Sin revisar: el comparador con datos y la web con sesión iniciada.
+
 ### Coste estimado de la lectura con IA
 
 Medido sobre los datos sintéticos: el documento de una empresa ocupa unos 4.400 caracteres (unos

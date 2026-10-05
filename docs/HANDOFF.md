@@ -43,8 +43,12 @@ consenso salen de FMP y el informe se completa (múltiplos, márgenes, técnico 
 de FY2026 a FY2028). **Los estados no salen de FMP:** el plan gratuito responde 402 cuando
 `limit` pasa de 5, y el informe pide 10 años y 12 trimestres (`ANNUAL_YEARS`, `QUARTERS`). Con
 `limit=5` responde 200, tanto anual como trimestral. Hoy los anuales caen a la SEC y no hay
-trimestres, así que el TTM sale de los anuales. Pendiente: pedir 5 periodos cuando FMP rechace
-más, o pasar a Starter. Sin probar todavía: el comparador, la web con login y la lectura con IA.
+trimestres, así que el TTM sale de los anuales. Sin probar todavía: el comparador, la web con
+login y la lectura con IA.
+
+**Hecho después (en `main`, desplegado como `fundamentals-lab-00003-pvc` el 2026-10-05):** `FmpClient.statements` pide 5 periodos
+cuando el plan rechaza más (`BASIC_PLAN_PERIODS`, `period_cap`) y el informe lo dice en una nota.
+47 tests en verde; con la clave real solo se comprobó `income-statement` con `limit=5`.
 
 ### Coste estimado de la lectura con IA
 

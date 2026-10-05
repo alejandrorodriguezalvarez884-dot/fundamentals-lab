@@ -36,6 +36,16 @@ Decisiones del usuario ese día:
 | | Que el usuario confirme los topes por defecto ($0.50 al día, $5 en total, $0.15 por petición) y el modelo |
 | **Dentro de Market Hub (2026-10-05)**: estilo nuevo (tema oscuro de Market Hub, `HubBar.astro` en la cabecera) y login obligatorio a través del hub: con `HUB_URL` y `HUB_SESSION_SECRET`, `src/fundamentals/hubauth.py` solo deja pasar a quien tenga la cookie `mh_session` del hub firmada con su secreto; sin sesión, las páginas van al login del hub y la API responde 401. Sin límite por IP detrás del login (decisión del usuario); los topes de la lectura siguen | Probar con datos reales de FMP y la primera lectura real con Claude |
 
+### Primera prueba con datos reales (2026-10-05, en local)
+
+`uv run fundamentals report AAPL` con la clave real (plan gratuito de FMP): perfil, precios y
+consenso salen de FMP y el informe se completa (múltiplos, márgenes, técnico y múltiplos futuros
+de FY2026 a FY2028). **Los estados no salen de FMP:** el plan gratuito responde 402 cuando
+`limit` pasa de 5, y el informe pide 10 años y 12 trimestres (`ANNUAL_YEARS`, `QUARTERS`). Con
+`limit=5` responde 200, tanto anual como trimestral. Hoy los anuales caen a la SEC y no hay
+trimestres, así que el TTM sale de los anuales. Pendiente: pedir 5 periodos cuando FMP rechace
+más, o pasar a Starter. Sin probar todavía: el comparador, la web con login y la lectura con IA.
+
 ### Coste estimado de la lectura con IA
 
 Medido sobre los datos sintéticos: el documento de una empresa ocupa unos 4.400 caracteres (unos

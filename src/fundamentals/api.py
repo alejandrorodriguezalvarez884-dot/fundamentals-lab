@@ -117,6 +117,10 @@ def create_app(store: Store | None = None, directory: Directory | None = None,
     ``hub`` is (hub URL, hub session secret) to admit only people signed in to Market Hub; by
     default it comes from HUB_URL and HUB_SESSION_SECRET, and None leaves the service public."""
     logging.basicConfig(level=logging.INFO)
+    # httpx logs every request URL at INFO, and FMP takes the key in the query string: keep the
+    # key out of the logs.
+    for noisy in ("httpx", "httpcore"):
+        logging.getLogger(noisy).setLevel(logging.WARNING)
     app = FastAPI(title="Fundamentals Lab", docs_url=None, redoc_url=None, openapi_url=None)
 
     origins = [o.strip() for o in os.environ.get("FUNDAMENTALS_ALLOWED_ORIGINS", "").split(",") if o.strip()]

@@ -138,3 +138,11 @@ def test_without_a_key_the_reading_is_off_and_says_so(directory, store, monkeypa
     assert client.get("/api/stock/AAPL").status_code == 200
     response = client.get("/api/stock/AAPL/reading")
     assert response.status_code == 503 and "not switched on" in response.json()["detail"]
+
+
+def test_the_provider_key_never_reaches_the_logs(directory, store):
+    # FMP takes the key in the query string, and httpx logs request URLs at INFO.
+    import logging
+
+    create_app(store=store, directory=directory, reporter=Reporter(store, FakeFmp()), hub=None)
+    assert logging.getLogger("httpx").getEffectiveLevel() >= logging.WARNING

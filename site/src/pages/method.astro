@@ -22,40 +22,40 @@ const formulas = [
 
 <Page title="Method" description="Where the numbers come from and how each one is computed.">
 	<div class="max-w-3xl">
-		<h1 class="text-3xl font-semibold tracking-tight text-ink-strong">Sources and formulas</h1>
-		<p class="mt-4 text-muted">
+		<h1 class="text-[2rem] font-medium leading-tight tracking-tight text-ink-strong">Sources and formulas</h1>
+		<p class="mt-4 text-ink">
 			Every figure on the site is computed by code from the data below, in the same way for every company. The AI reading is
 			written from those figures and only from them.
 		</p>
 
-		<h2 class="mt-10  text-xl font-semibold text-ink-strong">Sources</h2>
-		<ul class="mt-3 list-disc space-y-2 pl-5 text-muted">
-			<li><strong class="text-ink">Financial Modeling Prep</strong>: company profile, income statement, balance sheet and cash flow (annual and quarterly), daily prices adjusted for splits and dividends, and the analysts' consensus estimates.</li>
-			<li><strong class="text-ink">SEC EDGAR</strong>: the list of US-listed companies behind the search, and the XBRL facts of 10-K filings as a fallback for the annual statements.</li>
-			<li><strong class="text-ink">Claude (Anthropic)</strong>: the AI reading.</li>
+		<h2 class="sec sec-title mt-12">Sources</h2>
+		<ul class="mt-3 list-disc space-y-2 pl-5 text-ink">
+			<li><strong class="font-medium text-ink-strong">Financial Modeling Prep</strong>: company profile, income statement, balance sheet and cash flow (annual and quarterly), daily prices adjusted for splits and dividends, and the analysts' consensus estimates.</li>
+			<li><strong class="font-medium text-ink-strong">SEC EDGAR</strong>: the list of US-listed companies behind the search, and the XBRL facts of 10-K filings as a fallback for the annual statements.</li>
+			<li><strong class="font-medium text-ink-strong">Claude (Anthropic)</strong>: the AI reading.</li>
 		</ul>
 		<p class="mt-3 text-sm text-muted">A report is kept for twelve hours; an AI reading for the day. Figures follow each company's fiscal year, which does not always end in December.</p>
 
-		<h2 class="mt-10  text-xl font-semibold text-ink-strong">Formulas</h2>
-		<dl class="mt-3 divide-y divide-line rounded-md border border-line bg-panel">
+		<h2 class="sec sec-title mt-12">Formulas</h2>
+		<dl class="mt-2 divide-y divide-line">
 			{formulas.map(([term, text]) => (
-				<div class="grid gap-1 p-4 sm:grid-cols-[12rem_1fr] sm:gap-4">
-					<dt class="font-medium text-ink-strong">{term}</dt>
+				<div class="grid gap-1 py-3 sm:grid-cols-[12rem_1fr] sm:gap-6">
+					<dt class="text-ink-strong">{term}</dt>
 					<dd class="text-sm leading-relaxed text-muted">{text}</dd>
 				</div>
 			))}
 		</dl>
 
-		<h2 class="mt-10  text-xl font-semibold text-ink-strong">The AI reading</h2>
-		<p class="mt-3 text-muted">
+		<h2 class="sec sec-title mt-12">The AI reading</h2>
+		<p class="mt-3 text-ink">
 			The model receives a compact document with the figures of the page (no chart series) and writes what they show: growth,
 			profitability, balance sheet, valuation against its own history and the consensus, and price behaviour, plus a few points
 			worth checking. It is instructed to use only those numbers, to describe rather than advise, not to forecast prices and not to
 			call a stock cheap or expensive. It can still be wrong: the figures on the page are the reference.
 		</p>
 
-		<h2 class="mt-10  text-xl font-semibold text-ink-strong">What this is not</h2>
-		<p class="mt-3 text-muted">
+		<h2 class="sec sec-title mt-12">What this is not</h2>
+		<p class="mt-3 text-ink">
 			This site describes numbers. It does not recommend buying, selling or holding any security, does not set price targets and
 			does not forecast returns. Forward multiples are the published consensus of the analysts at today's price, which the
 			company may or may not meet. Technical indicators describe past prices. Data from third parties may be delayed or contain

@@ -3,6 +3,14 @@ export const SITE_NAME = "Fundamentals Lab";
 export const REPO_URL = "https://github.com/alejandrorodriguezalvarez884-dot/fundamentals-lab";
 export const AUTHOR_URL = "https://alejandrorodriguez.dev/";
 
+// The tool is a section of Market Hub: its header is the portal's, and a company's page links to
+// the same company in the portal and in the Earnings Radar.
+const site = (v: string | undefined, fallback: string) => (v ?? fallback).replace(/\/$/, "");
+export const HUB_URL = site(import.meta.env.PUBLIC_HUB_URL, "https://themarkethub.app");
+export const RADAR_URL = site(import.meta.env.PUBLIC_RADAR_URL, "https://radar.themarkethub.app");
+export const hubQuoteUrl = (ticker: string) => `${HUB_URL}/quote/?t=${encodeURIComponent(ticker)}`;
+export const radarUrl = (ticker: string) => `${RADAR_URL}/analyze/?ticker=${encodeURIComponent(ticker)}`;
+
 // Every internal link goes through here, so the site works under a sub-path too.
 export function link(path: string): string {
   const base = import.meta.env.BASE_URL.replace(/\/$/, "");

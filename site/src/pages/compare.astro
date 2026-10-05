@@ -5,13 +5,13 @@ import Search from "../components/Search.astro";
 ---
 
 <Page title="Compare" description="Compare up to five US-listed companies: fundamentals, valuation, forward multiples and price performance side by side." wide>
-	<h1 class="text-3xl font-semibold tracking-tight text-ink-strong">Compare companies</h1>
-	<p class="mt-2 text-muted">Add two to five companies by ticker or name.</p>
+	<h1 class="text-[2rem] font-medium leading-tight tracking-tight text-ink-strong">Compare companies</h1>
+	<p class="mt-2 text-ink">Add two to five companies by name or ticker.</p>
 	<div class="mt-5 flex flex-col gap-3 lg:flex-row lg:items-start">
 		<div class="w-full max-w-md"><Search mode="pick" button="Add" id="pick" /></div>
 		<div id="chips" class="flex flex-wrap gap-2 lg:pt-2"></div>
 	</div>
-	<div id="compare" class="mt-8"></div>
+	<div id="compare" class="mt-12"></div>
 </Page>
 
 <script>
@@ -37,10 +37,10 @@ import Search from "../components/Search.astro";
 
 	function drawChips() {
 		chips.replaceChildren(...tickers.map((t, k) => {
-			const chip = h("span", "inline-flex items-center gap-2 rounded-full border border-line-strong bg-panel py-1 pl-3 pr-1 text-sm font-semibold text-ink");
+			const chip = h("span", "num inline-flex items-center gap-2 rounded-[3px] border border-line-strong py-1 pl-2.5 pr-1 text-[13px] text-ink-strong");
 			const dot = h("span", "inline-block h-2.5 w-2.5 rounded-full");
 			dot.style.background = SERIES[k];
-			const x = h("button", "rounded-full px-2 text-faint hover:bg-raised hover:text-ink", "×");
+			const x = h("button", "rounded-sm px-1.5 text-muted hover:bg-raised hover:text-ink-strong", "×");
 			x.type = "button";
 			x.setAttribute("aria-label", `Remove ${t}`);
 			x.addEventListener("click", () => setTickers(tickers.filter((u) => u !== t)));
@@ -64,7 +64,7 @@ import Search from "../components/Search.astro";
 
 	function readingCard(): HTMLElement {
 		const c = card("AI reading of the comparison", "Claude compares the numbers in the table. It names highest and lowest; it does not pick a winner.");
-		const button = h("button", "rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-strong", "Write the reading");
+		const button = h("button", "btn btn-primary", "Write the reading");
 		button.type = "button";
 		const status = h("p", "mt-2 text-sm text-muted");
 		c.body.append(add(h("div"), button, status));
@@ -88,7 +88,7 @@ import Search from "../components/Search.astro";
 	}
 
 	function draw(r: Comparison) {
-		const el = h("div", "grid min-w-0 gap-4");
+		const el = h("div", "grid min-w-0 gap-12");
 		const perf = card("Price, rebased to 100", `Last year of daily closes, from ${r.prices.dates[0] ?? "—"}`);
 		perf.body.append(r.prices.dates.length ? compareChart(r.prices.dates, r.prices.series, r.tickers) : h("p", "text-sm text-muted", "No common price history."));
 
@@ -96,12 +96,12 @@ import Search from "../components/Search.astro";
 		const t = h("table", "data-table");
 		const head = add(h("tr"), h("th", "", ""), ...r.companies.map((c, k) => {
 			const th = h("th", "");
-			const a = h("a", "inline-flex items-center gap-1.5 font-semibold text-ink-strong hover:underline", c.ticker) as HTMLAnchorElement;
+			const a = h("a", "num inline-flex items-center gap-1.5 text-ink-strong hover:underline", c.ticker) as HTMLAnchorElement;
 			a.href = stockUrl(c.ticker);
 			const dot = h("span", "inline-block h-2 w-2 rounded-full");
 			dot.style.background = SERIES[k];
 			a.prepend(dot);
-			return add(th, a, h("div", "max-w-[10rem] truncate text-[11px] font-normal text-faint", tidyName(c.name)));
+			return add(th, a, h("div", "max-w-[10rem] truncate text-[12px] font-normal text-muted", tidyName(c.name)));
 		}));
 		const body = h("tbody");
 		for (const row of r.table) {
@@ -119,7 +119,7 @@ import Search from "../components/Search.astro";
 		const sc2 = card("Past growth against sales multiple", "Revenue CAGR over five years against EV/Sales today");
 		sc2.body.append(scatter(r.scatter.map((p, k) => ({ label: p.ticker, x: p.revenue_cagr_5y, y: p.ev_sales, color: SERIES[k] })), "Revenue CAGR 5y", "EV/Sales", "pct", "mult"));
 
-		add(el, readingCard(), perf.el, tableCard.el, add(h("div", "grid min-w-0 gap-4 lg:grid-cols-2"), sc.el, sc2.el));
+		add(el, readingCard(), perf.el, tableCard.el, add(h("div", "grid min-w-0 gap-x-14 gap-y-12 lg:grid-cols-2"), sc.el, sc2.el));
 		root.replaceChildren(el);
 	}
 
@@ -137,7 +137,7 @@ import Search from "../components/Search.astro";
 			if (!res.ok) throw new Error(body.detail ?? "The comparison failed.");
 			if (mine === seq) draw(body as Comparison);
 		} catch (e) {
-			if (mine === seq) root.replaceChildren(h("p", "rounded-md border border-down/40 bg-down-soft p-4 text-sm text-down", e instanceof Error ? e.message : "The comparison failed."));
+			if (mine === seq) root.replaceChildren(h("p", "border-l-2 border-down pl-4 text-down", e instanceof Error ? e.message : "The comparison failed."));
 		}
 	}
 

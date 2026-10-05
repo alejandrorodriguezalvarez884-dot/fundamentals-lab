@@ -19,8 +19,8 @@ const { large = false, compact = false, autofocus = false, mode = "open", button
 	<label class="sr-only" for={`${id}-input`}>Ticker or company name</label>
 	<div
 		class:list={[
-			"flex items-center gap-2 rounded-md border border-line-strong bg-page transition focus-within:border-accent",
-			large ? "p-1.5 pl-4" : compact ? "py-0.5 pl-3 pr-1" : "p-1 pl-3",
+			"group flex items-center gap-2 rounded-[3px] border border-line-strong transition focus-within:border-ink-strong",
+			large ? "p-1.5 pl-4" : compact ? "py-0.5 pl-3 pr-2" : "p-1 pl-3",
 		]}
 	>
 		<svg class="h-4 w-4 flex-none text-muted" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
@@ -33,9 +33,10 @@ const { large = false, compact = false, autofocus = false, mode = "open", button
 			autocomplete="off"
 			spellcheck="false"
 			autofocus={autofocus}
-			placeholder={compact ? "Search ticker or company" : "Ticker or company name — AAPL, Microsoft…"}
+			placeholder={compact ? "Search a company or ticker" : "Company or ticker: Apple, MSFT, KO…"}
 			class:list={["min-w-0 flex-1 bg-transparent text-ink-strong placeholder:text-faint focus:outline-none [&::-webkit-search-cancel-button]:hidden", large ? "py-2 text-base" : compact ? "py-1 text-[13px]" : "py-1 text-sm"]}
 		/>
+		{compact && <kbd class="hidden flex-none rounded-sm border border-line-strong px-1.5 text-[11px] leading-5 text-muted group-focus-within:hidden md:block" aria-hidden="true">/</kbd>}
 		{!compact && (
 			<button type="submit" class:list={["btn btn-primary flex-none", large ? "px-5 py-2" : "px-3 py-1.5"]}>
 				{button}
@@ -82,7 +83,7 @@ const { large = false, compact = false, autofocus = false, mode = "open", button
 					name.className = "min-w-0 truncate text-ink";
 					name.textContent = tidyName(c.name);
 					const ticker = document.createElement("span");
-					ticker.className = "flex-none text-xs font-semibold tabular-nums text-ink-strong";
+					ticker.className = "num flex-none text-xs text-muted";
 					ticker.textContent = c.ticker;
 					li.append(name, ticker);
 					li.addEventListener("pointerdown", (e) => (e.preventDefault(), go(c)));
@@ -158,10 +159,10 @@ const { large = false, compact = false, autofocus = false, mode = "open", button
 		right: 0;
 		margin-top: 6px;
 		padding: 6px;
-		border-radius: 6px;
+		border-radius: 3px;
 		border: 1px solid var(--color-line-strong);
 		background: var(--color-panel);
-		box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+		box-shadow: 0 16px 40px rgb(0 0 0 / 0.6);
 		min-width: 280px;
 	}
 	.search-list[hidden] {
@@ -173,8 +174,8 @@ const { large = false, compact = false, autofocus = false, mode = "open", button
 		justify-content: space-between;
 		gap: 12px;
 		padding: 8px 10px;
-		border-radius: 4px;
-		font-size: 13px;
+		border-radius: 2px;
+		font-size: 14px;
 		cursor: pointer;
 	}
 	.search-list li:hover,

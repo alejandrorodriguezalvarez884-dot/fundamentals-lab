@@ -1,9 +1,9 @@
 // Rendering of the stock page from a report. Each tab is a function that returns its element.
 import { barChart, lineChart } from "./charts";
-import { add, card, h, stat, toneOf } from "./dom";
+import { add, card, companyTabs, h, stat, toneOf } from "./dom";
 import { fmt, mult, money, pct, price, shortDate, signedPct, type Kind } from "./format";
 import { technicalChart } from "./pricechart";
-import { API, compareUrl, tidyName } from "./site";
+import { API, compareUrl, hubQuoteUrl, radarUrl, stockUrl, tidyName } from "./site";
 import type { MultipleKey, Period, Ratios, Reading, Report } from "./types";
 
 const yearLabel = (p: { fiscal_year: string; period: string; date: string }) =>
@@ -11,20 +11,23 @@ const yearLabel = (p: { fiscal_year: string; period: string; date: string }) =>
 
 export function header(r: Report): HTMLElement {
   const p = r.profile;
-  const el = h("header", "mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between");
+  const el = h("header", "mb-8 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between");
   const left = add(
     h("div", "min-w-0"),
-    add(h("div", "flex flex-wrap items-baseline gap-x-3"),
-      h("h1", " text-3xl font-semibold tracking-tight text-ink-strong sm:text-4xl", tidyName(p.name)),
-      h("span", "text-lg font-semibold text-muted", r.ticker)),
-    h("p", "mt-1 text-sm text-muted", [p.sector, p.industry, p.exchange].filter(Boolean).join(" · ")),
+    h("p", "text-[13px] text-muted", [r.ticker, p.exchange, p.sector, p.industry].filter(Boolean).join(" · ")),
+    h("h1", "mt-1 text-[2rem] font-medium leading-tight tracking-tight text-ink-strong", tidyName(p.name)),
+    add(h("div", "mt-4"), companyTabs([
+      { label: "Price", href: hubQuoteUrl(r.ticker) },
+      { label: "Fundamentals", href: stockUrl(r.ticker), current: true },
+      { label: "Results release", href: radarUrl(r.ticker) },
+    ])),
   );
   const v = r.valuation;
   const right = add(
     h("div", "flex items-end gap-6"),
     stat("Price", price(v.price), p.change_pct != null ? `${signedPct(p.change_pct / 100, 2)} today` : undefined),
     stat("Market cap", money(v.market_cap)),
-    add(h("a", "mb-1 rounded-full border border-line-strong px-3 py-1.5 text-sm font-medium text-ink hover:border-muted"), "Compare…"),
+    add(h("a", "btn btn-ghost mb-1"), "Compare…"),
   );
   (right.lastChild as HTMLAnchorElement).href = compareUrl([r.ticker]);
   return add(el, left, right);
@@ -32,7 +35,7 @@ export function header(r: Report): HTMLElement {
 
 export function meta(r: Report): HTMLElement {
   const src = Object.entries(r.sources).map(([k, v]) => `${k}: ${v}`).join(" · ");
-  const el = h("div", "mt-8 space-y-1 text-xs text-muted");
+  const el = h("div", "mt-12 space-y-1 border-t border-line pt-4 text-[12.5px] text-muted");
   add(el, h("p", "", `Built ${r.built_utc.slice(0, 16).replace("T", " ")} UTC · ${src}`));
   for (const n of r.notes) el.append(h("p", "text-warn", n));
   return el;
@@ -41,7 +44,7 @@ export function meta(r: Report): HTMLElement {
 // --- Overview -----------------------------------------------------------------------------
 
 export function overview(r: Report): HTMLElement {
-  const el = h("div", "grid min-w-0 gap-4");
+  const el = h("div", "grid min-w-0 gap-12");
   el.append(readingCard(r));
   const v = r.valuation;
   const last = r.annual_ratios[r.annual_ratios.length - 1];
@@ -81,11 +84,11 @@ export function overview(r: Report): HTMLElement {
 
 export function renderReading(body: HTMLElement, reading: Reading) {
   body.replaceChildren(
-    h("p", " text-xl leading-snug text-ink-strong", reading.headline),
+    h("p", "max-w-3xl text-xl font-medium leading-snug text-ink-strong", reading.headline),
     add(h("div", "mt-5 grid gap-5 sm:grid-cols-2"),
-      ...reading.sections.map((s) => add(h("div"), h("h4", "text-sm font-semibold text-ink-strong", s.title), h("p", "mt-1 text-sm leading-relaxed text-muted", s.body)))),
+      ...reading.sections.map((s) => add(h("div"), h("h4", "text-sm font-medium text-ink-strong", s.title), h("p", "mt-1 text-sm text-ink", s.body)))),
     reading.points_to_check.length
-      ? add(h("div", "mt-5 rounded-md bg-page p-4"), h("h4", "text-sm font-semibold text-ink-strong", "Points to check"),
+      ? add(h("div", "mt-6 border-t border-line pt-4"), h("h4", "text-sm font-medium text-ink-strong", "Points to check"),
           add(h("ul", "mt-2 list-disc space-y-1 pl-5 text-sm text-muted"), ...reading.points_to_check.map((p) => h("li", "", p))))
       : "",
     h("p", "mt-4 text-xs text-faint", `Written by ${reading.model} on ${reading.read_utc.slice(0, 16).replace("T", " ")} UTC from the numbers on this page. It describes them; it is not advice.`),
@@ -94,7 +97,7 @@ export function renderReading(body: HTMLElement, reading: Reading) {
 
 export function readingCard(r: Report, path = `/api/stock/${encodeURIComponent(r.ticker)}/reading`): HTMLElement {
   const c = card("AI reading", "Claude reads the numbers computed on this page and says what they show. Descriptive only.");
-  const button = h("button", "rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-strong", "Write the reading");
+  const button = h("button", "btn btn-primary", "Write the reading");
   button.type = "button";
   const status = h("p", "mt-2 text-sm text-muted");
   c.body.append(add(h("div"), button, status));
@@ -187,9 +190,9 @@ function table(periods: Period[], ratios: Ratios[]): HTMLElement {
 }
 
 export function fundamentals(r: Report): HTMLElement {
-  const el = h("div", "grid min-w-0 gap-4");
-  const bar = h("div", "flex gap-1");
-  const content = h("div", "grid gap-4");
+  const el = h("div", "grid min-w-0 gap-12");
+  const bar = h("div", "tabs");
+  const content = h("div", "grid gap-12");
   const draw = (kind: "annual" | "quarter") => {
     const periods = kind === "annual" ? r.annual : r.quarters;
     const ratios = kind === "annual" ? r.annual_ratios : r.quarter_ratios;
@@ -229,7 +232,7 @@ export function fundamentals(r: Report): HTMLElement {
         add(h("tr"), h("td", "", name), h("td", "", pct(v["3y"])), h("td", "", pct(v["5y"])), h("td", "", pct(v["10y"]))))));
     growth.body.append(add(h("div", "overflow-x-auto"), gt));
     content.replaceChildren(
-      add(h("div", "grid min-w-0 gap-4 lg:grid-cols-2"), scale.el, margins.el, returns.el, cash.el),
+      add(h("div", "grid min-w-0 gap-x-14 gap-y-12 lg:grid-cols-2"), scale.el, margins.el, returns.el, cash.el),
       kind === "annual" ? growth.el : "",
       all.el,
     );
@@ -259,7 +262,7 @@ const MULTIPLES: { key: MultipleKey; label: string }[] = [
 ];
 
 export function valuation(r: Report): HTMLElement {
-  const el = h("div", "grid min-w-0 gap-4");
+  const el = h("div", "grid min-w-0 gap-12");
   const v = r.valuation;
   const today = card("Valuation today", `At ${price(v.price)}, on the trailing twelve months`);
   add(today.body, add(h("div", "grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4"),
@@ -272,7 +275,7 @@ export function valuation(r: Report): HTMLElement {
   // History, today and the consensus years on one line, per multiple.
   const f = r.forward.available ? r.forward : null;
   const path = card("Multiples through time", "At each fiscal year end, today (TTM), and at today's price on the consensus for the coming years (dashed)");
-  const picker = h("div", "mb-3 flex flex-wrap gap-1");
+  const picker = h("div", "tabs mb-4");
   const chartBox = h("div");
   const note = h("p", "mt-3 text-sm text-muted");
   const draw = (key: MultipleKey) => {
@@ -349,12 +352,13 @@ export function valuation(r: Report): HTMLElement {
 // --- Technical ----------------------------------------------------------------------------
 
 export function technical(r: Report): HTMLElement {
-  const el = h("div", "grid min-w-0 gap-4");
+  const el = h("div", "grid min-w-0 gap-12");
   if (!r.technical.available) return add(el, h("p", "text-sm text-muted", r.technical.reason));
   const { summary: s, levels, series } = r.technical;
-  const chips = h("div", "flex flex-wrap gap-2");
-  const tone = { up: "bg-up-soft text-up border-up/40", down: "bg-down-soft text-down border-down/40", warn: "bg-warn-soft text-warn border-warn/40", neutral: "bg-raised text-ink border-line" };
-  for (const st of s.states) chips.append(h("span", `rounded-full border px-3 py-1 text-xs font-medium ${tone[st.tone]}`, st.label));
+  // Plain statements, one per line; the colour is the only mark of their direction.
+  const chips = h("ul", "grid gap-x-10 gap-y-1.5 text-sm sm:grid-cols-2");
+  const tone = { up: "text-up", down: "text-down", warn: "text-warn", neutral: "text-ink" };
+  for (const st of s.states) chips.append(h("li", tone[st.tone], st.label));
   const top = card("Where the indicators stand", `Close of ${shortDate(s.date)}. Descriptions of past price behaviour, not signals.`);
   top.body.append(chips);
   el.append(top.el);
@@ -381,9 +385,9 @@ export function technical(r: Report): HTMLElement {
   el.append(stats.el);
 
   const lv = card("Swing levels", "Prices where the stock turned in the last six months, grouped when within 1.5% of each other. More touches, more often the price turned there.");
-  const list = (title: string, items: typeof levels.supports) => add(h("div"), h("h4", "mb-2 text-sm font-semibold text-ink-strong", title),
+  const list = (title: string, items: typeof levels.supports) => add(h("div"), h("h4", "mb-2 text-sm font-medium text-ink-strong", title),
     items.length ? add(h("ul", "space-y-1 text-sm"), ...items.map((l) => add(h("li", "flex justify-between gap-4 tabular-nums"),
-      h("span", "font-medium text-ink-strong", price(l.level)), h("span", "text-muted", `${signedPct(l.distance)} · ${l.touches} touch${l.touches > 1 ? "es" : ""}`))))
+      h("span", "num text-ink-strong", price(l.level)), h("span", "text-muted", `${signedPct(l.distance)} · ${l.touches} touch${l.touches > 1 ? "es" : ""}`))))
       : h("p", "text-sm text-muted", "None in the last six months."));
   add(lv.body, add(h("div", "grid gap-6 sm:grid-cols-2"), list("Below the price", levels.supports), list("Above the price", levels.resistances)));
   el.append(lv.el);

@@ -4,9 +4,11 @@ import { add, h, svg } from "./dom";
 import { fmt, type Kind } from "./format";
 
 // Categorical slots in fixed order (validated palette from the dataviz reference).
-export const SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4"];
-const GRID = "#2a2e39";
-const AXIS_TEXT = "#868993";
+// Series colours name a series, not a direction: none of them is the green or red of a move.
+export const SERIES = ["#f2f0ea", "#7aa7ff", "#e0b341", "#c39bf0", "#8c8b86"];
+const GRID = "#222528";
+const AXIS_TEXT = "#8c8b86";
+const PAGE = "#0b0c0d";
 
 export type BarSeries = { name: string; values: (number | null)[]; color?: string };
 export type LineSeries = {
@@ -72,7 +74,7 @@ function legend(items: { name: string; color: string; dashed?: boolean }[]): HTM
 function yAxis(plot: SVGSVGElement, ticks: number[], y: (v: number) => number, kind: Kind) {
   for (const t of ticks) {
     const yy = y(t);
-    plot.append(svg("line", { x1: FRAME.left, x2: FRAME.width - FRAME.right, y1: yy, y2: yy, stroke: t === 0 ? "#5d606b" : GRID, "stroke-width": 1 }));
+    plot.append(svg("line", { x1: FRAME.left, x2: FRAME.width - FRAME.right, y1: yy, y2: yy, stroke: t === 0 ? "#3a3e42" : GRID, "stroke-width": 1 }));
     const label = svg("text", { x: FRAME.left - 8, y: yy + 4, "text-anchor": "end", "font-size": 11, fill: AXIS_TEXT });
     label.textContent = fmt(kind, t);
     plot.append(label);
@@ -117,7 +119,7 @@ function tipRow(name: string, value: string, color?: string): HTMLElement {
     left.append(dot);
   }
   left.append(name);
-  return add(row, left, h("span", "font-semibold tabular-nums text-ink-strong", value));
+  return add(row, left, h("span", "num text-ink-strong", value));
 }
 
 // Grouped bars: one group per period, one bar per series.
@@ -182,8 +184,8 @@ function drawLines(labels: string[], series: LineSeries[], kind: Kind, reference
   yAxis(plot, ticks, y, kind);
   if (reference) {
     const yy = y(reference.value);
-    plot.append(svg("line", { x1: FRAME.left, x2: FRAME.width - FRAME.right, y1: yy, y2: yy, stroke: "#868993", "stroke-width": 1, "stroke-dasharray": "2 3" }));
-    const t = svg("text", { x: FRAME.left + 6, y: yy - 6, "text-anchor": "start", "font-size": 11, fill: "#d1d4dc", "paint-order": "stroke", stroke: "#1e222d", "stroke-width": 3 });
+    plot.append(svg("line", { x1: FRAME.left, x2: FRAME.width - FRAME.right, y1: yy, y2: yy, stroke: AXIS_TEXT, "stroke-width": 1, "stroke-dasharray": "2 3" }));
+    const t = svg("text", { x: FRAME.left + 6, y: yy - 6, "text-anchor": "start", "font-size": 11, fill: "#c9c7c1", "paint-order": "stroke", stroke: PAGE, "stroke-width": 3 });
     t.textContent = `${reference.label} ${fmt(kind, reference.value)}`;
     plot.append(t);
   }
@@ -208,7 +210,7 @@ function drawLines(labels: string[], series: LineSeries[], kind: Kind, reference
     }
     const dots: SVGCircleElement[] = [];
     s.values.forEach((v, i) => {
-      const c = svg("circle", { cx: x(i), cy: v === null ? -100 : y(v), r: 4, fill: s.dashedFrom !== undefined && i > s.dashedFrom ? "#1e222d" : color, stroke: color, "stroke-width": 2 });
+      const c = svg("circle", { cx: x(i), cy: v === null ? -100 : y(v), r: 4, fill: s.dashedFrom !== undefined && i > s.dashedFrom ? PAGE : color, stroke: color, "stroke-width": 2 });
       c.style.opacity = labels.length <= 16 ? "1" : "0";
       if (v === null) c.style.display = "none";
       plot.append(c);
@@ -217,7 +219,7 @@ function drawLines(labels: string[], series: LineSeries[], kind: Kind, reference
     markers.push(dots);
   });
   xLabels(plot, labels, x);
-  const cross = svg("line", { y1: FRAME.top, y2: FRAME.height - FRAME.bottom, stroke: "#5d606b", "stroke-width": 1 });
+  const cross = svg("line", { y1: FRAME.top, y2: FRAME.height - FRAME.bottom, stroke: "#5f5f5b", "stroke-width": 1 });
   cross.style.display = "none";
   plot.append(cross);
   tooltip(plot, tip, labels.length, x, (i) => [
@@ -230,7 +232,7 @@ function drawLines(labels: string[], series: LineSeries[], kind: Kind, reference
   });
   const items = series.map((s, k) => ({ name: s.name, color: s.color ?? SERIES[k] }));
   const dashedNote = series.some((s) => s.dashedFrom !== undefined)
-    ? [{ name: "Analysts' consensus at today's price", color: "#868993", dashed: true }]
+    ? [{ name: "Analysts' consensus at today's price", color: AXIS_TEXT, dashed: true }]
     : [];
   return add(h("div"), items.length > 1 || dashedNote.length ? legend([...(items.length > 1 ? items : []), ...dashedNote]) : null, root);
 }
@@ -259,13 +261,13 @@ function drawScatter(points: { label: string; x: number | null; y: number | null
     label.textContent = fmt(xKind, t);
     plot.append(label);
   }
-  const xl = svg("text", { x: FRAME.left + innerW / 2, y: FRAME.height - 4, "text-anchor": "middle", "font-size": 11, fill: "#868993" });
+  const xl = svg("text", { x: FRAME.left + innerW / 2, y: FRAME.height - 4, "text-anchor": "middle", "font-size": 11, fill: AXIS_TEXT });
   xl.textContent = xName;
   plot.append(xl);
   for (const p of ok) {
     const g = svg("g");
-    g.append(svg("circle", { cx: x(p.x), cy: y(p.y), r: 6, fill: p.color, stroke: "#1e222d", "stroke-width": 2 }));
-    const t = svg("text", { x: x(p.x) + 10, y: y(p.y) + 4, "font-size": 12, "font-weight": 600, fill: "#f0f3fa" });
+    g.append(svg("circle", { cx: x(p.x), cy: y(p.y), r: 6, fill: p.color, stroke: PAGE, "stroke-width": 2 }));
+    const t = svg("text", { x: x(p.x) + 10, y: y(p.y) + 4, "font-size": 12, "font-weight": 500, fill: "#f2f0ea" });
     t.textContent = p.label;
     g.append(t);
     const hit = svg("circle", { cx: x(p.x), cy: y(p.y), r: 16, fill: "transparent" });

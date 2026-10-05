@@ -2,14 +2,10 @@
 // The stock page. The page is a shell: the browser asks the API for the report, shows each step
 // while it is built and then draws the tabs.
 import Page from "../components/Page.astro";
-import Search from "../components/Search.astro";
 ---
 
 <Page title="Stock" description="Fundamentals, valuation, forward multiples and technical analysis of a US-listed company." wide>
-	<div class="max-w-xl">
-		<Search />
-	</div>
-	<div id="stock" class="mt-8"></div>
+	<div id="stock"></div>
 	<noscript><p class="mt-6 text-sm text-muted">This page needs JavaScript.</p></noscript>
 </Page>
 
@@ -31,7 +27,7 @@ import Search from "../components/Search.astro";
 
 	function draw(r: Report) {
 		document.title = `${r.ticker} · ${r.profile.name} — Fundamentals Lab`;
-		const nav = h("div", "mb-5 flex flex-wrap gap-1 border-b border-line pb-3");
+		const nav = h("div", "tabs mb-10 border-b border-line");
 		nav.setAttribute("role", "tablist");
 		const panel = h("div");
 		const built = new Map<string, HTMLElement>();
@@ -44,7 +40,7 @@ import Search from "../components/Search.astro";
 			history.replaceState(null, "", `#${entry[0]}`);
 		};
 		for (const [id, label] of TABS) {
-			const b = h("button", "tab-btn text-sm", label);
+			const b = h("button", "tab-btn -mb-px !py-2 !text-sm", label);
 			b.type = "button";
 			b.dataset.tab = id;
 			b.setAttribute("role", "tab");
@@ -56,15 +52,15 @@ import Search from "../components/Search.astro";
 	}
 
 	function progress(): { el: HTMLElement; step: (s: Step) => void } {
-		const el = h("div", "max-w-xl rounded-md border border-line bg-panel p-5");
+		const el = h("div", "sec max-w-xl");
 		const list = h("ol", "space-y-2 text-sm");
-		add(el, h("p", "mb-3 text-sm font-medium text-ink-strong", `Building the report for ${ticker}`), list);
+		add(el, h("p", "sec-title mb-3", `Building the report for ${ticker}`), list);
 		let last: HTMLElement | null = null;
 		return {
 			el,
 			step: (s) => {
 				if (last) last.classList.replace("text-ink-strong", "text-muted"), last.querySelector(".dot")?.classList.replace("animate-pulse", "opacity-40");
-				const li = add(h("li", "flex items-center gap-2 text-ink-strong"), h("span", "dot inline-block h-2 w-2 flex-none animate-pulse rounded-full bg-accent-strong"), "detail" in s && s.detail ? s.detail : s.step);
+				const li = add(h("li", "flex items-center gap-2 text-ink-strong"), h("span", "dot inline-block h-1.5 w-1.5 flex-none animate-pulse rounded-full bg-ink-strong"), "detail" in s && s.detail ? s.detail : s.step);
 				list.append(li);
 				last = li;
 			},
@@ -73,7 +69,7 @@ import Search from "../components/Search.astro";
 
 	async function load() {
 		if (!ticker) {
-			root.replaceChildren(h("p", "text-muted", "Search for a company by its ticker or name."));
+			root.replaceChildren(h("p", "text-muted", "Search for a company by its name or ticker, in the box above."));
 			return;
 		}
 		const p = progress();
@@ -104,7 +100,7 @@ import Search from "../components/Search.astro";
 			}
 			throw new Error("The report was cut off. Try again.");
 		} catch (e) {
-			root.replaceChildren(h("p", "rounded-md border border-down/40 bg-down-soft p-4 text-sm text-down", e instanceof Error ? e.message : "The report failed."));
+			root.replaceChildren(h("p", "border-l-2 border-down pl-4 text-down", e instanceof Error ? e.message : "The report failed."));
 		}
 	}
 	load();

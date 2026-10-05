@@ -18,7 +18,7 @@ const comparisons = [
 	["V", "MA"],
 ];
 const sections = [
-	["Fundamentals", "Ten years of income statement, balance sheet and cash flow, plus the last twelve quarters. Margins, returns on capital, leverage and growth, computed the same way for every company."],
+	["Fundamentals", "Income statement, balance sheet and cash flow by year and by quarter. Margins, returns on capital, leverage and growth, computed the same way for every company."],
 	["Valuation", "P/E, EV/EBITDA, EV/Sales, P/FCF and yields today, and each one at every past fiscal year end, so today's multiple sits against the company's own history."],
 	["Forward multiples", "The analysts' consensus for the next fiscal years turned into the multiples the stock would trade at if it is met and the price does not move."],
 	["Technical analysis", "Candles with the 50- and 200-day averages, Bollinger bands, RSI and MACD, swing levels, volatility, drawdown and beta against the S&P 500."],
@@ -28,40 +28,40 @@ const sections = [
 ---
 
 <Page title={SITE_NAME} description="The numbers of any US-listed company: fundamentals, valuation history, forward multiples from the analysts' consensus, technical analysis and side-by-side comparison, with an AI reading.">
-	<section class="mx-auto max-w-3xl pt-6 text-center sm:pt-12">
-		<h1 class="text-4xl font-semibold tracking-tight text-ink-strong sm:text-5xl">Every number of a company, in one place</h1>
-		<p class="mx-auto mt-4 max-w-2xl text-lg text-muted">
-			Fundamentals, valuation against its own history, where the multiples go if the analysts' consensus is met, the technical
-			picture and a side-by-side comparison. With an AI reading that explains the numbers, never what to do with them.
+	<section>
+		<h1 class="lede">Every number of a company, on one page.</h1>
+		<p class="mt-5 max-w-2xl text-ink">
+			Its statements, its valuation against its own history, where the multiples go if the analysts' consensus is met, and
+			the technical picture. An AI reading says what the numbers show, never what to do with them.
 		</p>
-		<div class="mx-auto mt-8 max-w-2xl text-left">
+		<div class="mt-8 max-w-2xl">
 			<Search large autofocus />
 		</div>
-		<div class="mt-5 flex flex-wrap justify-center gap-2 text-sm">
+		<p class="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted">
+			<span>Try</span>
 			{examples.map(([t, n]) => (
-				<a href={stockUrl(t)} class="rounded-full border border-line bg-panel px-3 py-1 text-ink hover:border-faint">
-					<span class="font-semibold">{t}</span> <span class="text-muted">{n}</span>
-				</a>
+				<a href={stockUrl(t)} class="link">{n} <span class="num text-[12.5px] text-muted">{t}</span></a>
 			))}
-		</div>
+		</p>
 	</section>
 
-	<section class="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-		{sections.map(([title, text]) => (
-			<div class="rounded-md border border-line bg-panel p-5">
-				<h2 class="text-lg font-semibold text-ink-strong">{title}</h2>
-				<p class="mt-2 text-sm leading-relaxed text-muted">{text}</p>
-			</div>
-		))}
-	</section>
-
-	<section class="mt-12 rounded-md border border-line bg-panel p-6">
-		<h2 class="text-xl font-semibold text-ink-strong">Compare companies</h2>
-		<p class="mt-1 text-sm text-muted">Pick two to five. A few to start with:</p>
-		<div class="mt-4 flex flex-wrap gap-2 text-sm">
-			{comparisons.map((ts) => (
-				<a href={compareUrl(ts)} class="rounded-full border border-line px-3 py-1 font-medium text-ink hover:border-faint">{ts.join(" · ")}</a>
-			))}
-		</div>
-	</section>
+	<div class="mt-16 grid gap-x-14 gap-y-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+		<section class="sec">
+			<h2 class="sec-title">What a company page has</h2>
+			<dl class="mt-2 divide-y divide-line">
+				{sections.map(([title, text]) => (
+					<div class="grid gap-x-6 gap-y-0.5 py-3 sm:grid-cols-[10rem_minmax(0,1fr)]"><dt class="text-ink-strong">{title}</dt><dd class="text-sm text-muted">{text}</dd></div>
+				))}
+			</dl>
+		</section>
+		<section class="sec self-start">
+			<div class="sec-head"><h2 class="sec-title">Compare companies</h2><span class="sec-note">Two to five, side by side</span></div>
+			<ul class="divide-y divide-line">
+				{comparisons.map((ts) => (
+					<li><a href={compareUrl(ts)} class="group flex items-baseline justify-between gap-4 py-3">
+						<span class="num text-ink-strong group-hover:underline">{ts.join("  ·  ")}</span><span class="text-muted group-hover:text-ink-strong" aria-hidden="true">→</span></a></li>
+				))}
+			</ul>
+		</section>
+	</div>
 </Page>

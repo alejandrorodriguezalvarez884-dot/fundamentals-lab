@@ -18,11 +18,11 @@ export function svg<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<
   return e;
 }
 
-// A titled card: the building block of every section.
+// A titled section, the building block of every page: a rule, a title, the content. No box.
 export function card(title: string, subtitle?: string, cls = ""): { el: HTMLElement; body: HTMLElement } {
-  const el = h("section", `min-w-0 rounded-md border border-line bg-panel p-4 sm:p-6 ${cls}`);
-  const head = add(h("header", "mb-4"), h("h3", " text-lg font-semibold text-ink-strong", title));
-  if (subtitle) head.append(h("p", "mt-1 text-sm text-muted", subtitle));
+  const el = h("section", `sec ${cls}`);
+  const head = add(h("header", "mb-4"), h("h3", "sec-title", title));
+  if (subtitle) head.append(h("p", "mt-1 max-w-3xl text-[13px] text-muted", subtitle));
   const body = h("div");
   add(el, head, body);
   return { el, body };
@@ -33,11 +33,25 @@ export function stat(label: string, value: string, note?: string, tone: "up" | "
   const color = tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-ink-strong";
   return add(
     h("div", "min-w-0"),
-    h("div", "text-xs font-medium uppercase tracking-wide text-muted", label),
-    h("div", `mt-1 text-xl font-semibold tabular-nums ${color}`, value),
-    note ? h("div", "mt-0.5 text-xs text-muted", note) : null,
+    h("div", "text-[13px] text-muted", label),
+    h("div", `num mt-1 text-xl ${color}`, value),
+    note ? h("div", "mt-0.5 text-[12.5px] text-muted", note) : null,
   );
 }
 
 export const toneOf = (v: number | null | undefined): "up" | "down" | "" =>
   typeof v === "number" ? (v > 0 ? "up" : v < 0 ? "down" : "") : "";
+
+// The same company in the three parts of Market Hub: its price page on the portal, its numbers
+// here and its latest results release in the Earnings Radar.
+export function companyTabs(links: { label: string; href: string; current?: boolean }[]): HTMLElement {
+  const nav = h("nav", "tabs");
+  nav.setAttribute("aria-label", "This company in Market Hub");
+  for (const l of links) {
+    const a = h("a", "tab-btn", l.label);
+    a.href = l.href;
+    if (l.current) a.setAttribute("aria-selected", "true"), a.setAttribute("aria-current", "page");
+    nav.append(a);
+  }
+  return nav;
+}

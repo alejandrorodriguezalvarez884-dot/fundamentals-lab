@@ -11,6 +11,16 @@
 	type Me = { user: { name: string; email: string; picture: string } | null; hub: string | null };
 	const box = document.getElementById("hub-bar")!;
 
+	// A session that ends while a page is open: the API answers 401 with the hub's sign-in
+	// address, and the visitor goes there (and comes back after signing in).
+	const plainFetch = window.fetch.bind(window);
+	window.fetch = async (...args: Parameters<typeof fetch>) => {
+		const res = await plainFetch(...args);
+		if (res.status === 401)
+			res.clone().json().then((b: { signin?: string }) => b?.signin && location.assign(b.signin)).catch(() => {});
+		return res;
+	};
+
 	function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls: string, text?: string) {
 		const e = document.createElement(tag);
 		e.className = cls;
@@ -18,7 +28,7 @@
 		return e;
 	}
 
-	fetch(`${API}/api/me`, { credentials: "include" })
+	plainFetch(`${API}/api/me`, { credentials: "include" })
 		.then((r) => (r.ok ? (r.json() as Promise<Me>) : null))
 		.then((me) => {
 			if (!me?.hub) return;

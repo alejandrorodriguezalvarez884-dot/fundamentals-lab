@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import os
 from base64 import b64decode
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 import itsdangerous
 from starlette.requests import Request
@@ -49,9 +49,15 @@ class HubGate:
         self.app, self.hub, self.secret = app, hub_url.rstrip("/"), secret
 
     def signin_url(self, request: Request) -> str:
+        """The hub's sign-in, coming back here afterwards. For an API call "here" is the page that
+        made it (its Referer, when it is this same site), or the tool's home."""
         scheme = "https" if self.hub.startswith("https:") else request.url.scheme
         host = request.headers.get("x-forwarded-host") or request.headers.get("host", "")
-        here = f"{scheme}://{host}{request.url.path}" + (f"?{request.url.query}" if request.url.query else "")
+        if request.url.path.startswith("/api/"):
+            referer = request.headers.get("referer", "")
+            here = referer if urlsplit(referer).netloc == host else f"{scheme}://{host}/"
+        else:
+            here = f"{scheme}://{host}{request.url.path}" + (f"?{request.url.query}" if request.url.query else "")
         return f"{self.hub}/signin/?next={quote(here, safe='')}"
 
     async def __call__(self, scope, receive, send):

@@ -59,8 +59,13 @@ def test_signed_out_visitors_go_to_the_hub(directory, store):
     target = urlparse(page.headers["location"])
     assert f"{target.scheme}://{target.netloc}{target.path}" == f"{HUB}/signin/"
     assert parse_qs(target.query)["next"] == ["https://fundamentals.themarkethub.app/stock/?t=AAPL"]
-    api = c.get("/api/search", params={"q": "apple"})
-    assert api.status_code == 401 and api.json()["signin"].startswith(f"{HUB}/signin/")
+    api = c.get("/api/search", params={"q": "apple"}, headers={"referer": "https://fundamentals.themarkethub.app/compare/?t=KO,PEP"})
+    assert api.status_code == 401
+    # After signing in, back to the page that made the call, not to the API.
+    back = parse_qs(urlparse(api.json()["signin"]).query)["next"]
+    assert back == ["https://fundamentals.themarkethub.app/compare/?t=KO,PEP"]
+    foreign = c.get("/api/search", params={"q": "apple"}, headers={"referer": "https://evil.example/x"})
+    assert parse_qs(urlparse(foreign.json()["signin"]).query)["next"] == ["https://fundamentals.themarkethub.app/"]
     c.cookies.set("mh_session", hub_cookie(secret="forged"))
     assert c.get("/api/me").status_code == 401
 

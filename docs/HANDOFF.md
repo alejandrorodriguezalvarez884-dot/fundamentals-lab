@@ -32,7 +32,7 @@ Decisiones del usuario ese día:
 | Web Astro (`site/`): portada con buscador, ficha de acción con 4 pestañas (Overview con lectura IA, Fundamentals, Valuation & forward, Technical), comparador y Method. Revisada en Chromium a 1280 y 390 px con datos sintéticos: sin desbordes, sin errores de consola | Revisarla con datos reales |
 | Lectura con IA: `claude-opus-5-5`, esfuerzo `low`, salida JSON con esquema, `fallbacks: "default"`. Se guarda por día y por empresa; abrir una página nunca gasta | **Ninguna llamada real a Claude todavía.** La clave de Anthropic está en `.env` y responde (listado de modelos, gratis) |
 | `Makefile`, `Dockerfile`, `scripts/deploy-cloudrun.sh` (dos secretos, bucket, topes por variable de entorno) | No desplegado. Falta `FMP_API_KEY` y `SEC_USER_AGENT` en `.env` |
-| | Crear el repo en GitHub (la integración no tenía permiso para crearlo) y subir el código |
+| Repo público en GitHub: `alejandrorodriguezalvarez884-dot/fundamentals-lab`, creado por el usuario el 2026-10-05; código subido a `main` | |
 | | Que el usuario confirme los topes por defecto ($0.50 al día, $5 en total, $0.15 por petición) y el modelo |
 | | Dominio propio (como `earningsradar.app`) y tarjeta en la web personal |
 
@@ -71,12 +71,10 @@ mismo día son gratis. Cambiar a Sonnet: `READING_MODEL=claude-sonnet-5-5 make d
 
 ## Siguientes pasos, en orden
 
-1. Crear el repo `fundamentals-lab` (público) en GitHub, dar acceso a la integración de Claude y
-   subir el código.
-2. Abrir la red del entorno a `financialmodelingprep.com`, `www.sec.gov` y `data.sec.gov`, o
+1. Abrir la red del entorno a `financialmodelingprep.com`, `www.sec.gov` y `data.sec.gov`, o
    trabajar en local.
-3. Poner `FMP_API_KEY` y `SEC_USER_AGENT` en `.env` y ejecutar `uv run fundamentals report AAPL`.
+2. Poner `FMP_API_KEY` y `SEC_USER_AGENT` en `.env` y ejecutar `uv run fundamentals report AAPL`.
    Comparar unas cifras con la web de la empresa o con FMP y corregir los nombres de campo.
-4. Con permiso del usuario, una lectura real: `uv run fundamentals reading AAPL --yes` (≈ $0.04).
-5. `make serve` y revisar la web con datos reales.
-6. `make deploy` y, si el usuario quiere, un dominio.
+3. Con permiso del usuario, una lectura real: `uv run fundamentals reading AAPL --yes` (≈ $0.04).
+4. `make serve` y revisar la web con datos reales.
+5. `make deploy` y, si el usuario quiere, un dominio.

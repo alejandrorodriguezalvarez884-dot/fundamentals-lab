@@ -46,9 +46,16 @@ def _positive(value: float | None) -> float | None:
     return None if value is None else abs(value)
 
 
+# The free plan answers statements only up to this many periods; asking for more is refused.
+BASIC_PLAN_PERIODS = 5
+
+
 class FmpClient:
     def __init__(self, api_key: str | None = None, client: httpx.Client | None = None):
         self.api_key = api_key if api_key is not None else os.environ.get("FMP_API_KEY", "").strip()
+        # Set once the plan has refused a longer history and answered a shorter one: later
+        # companies ask for that many periods straight away.
+        self.period_cap: int | None = None
         self.client = client
 
     @property
@@ -115,7 +122,15 @@ class FmpClient:
     def statements(self, ticker: str, period: str, limit: int) -> list[dict]:
         """Income, balance sheet and cash flow merged by period end, oldest first.
         ``period`` is ``annual`` or ``quarter``."""
-        income = self._get("income-statement", symbol=ticker, period=period, limit=limit) or []
+        limit = min(limit, self.period_cap or limit)
+        try:
+            income = self._get("income-statement", symbol=ticker, period=period, limit=limit) or []
+        except FmpUnavailable:
+            if limit <= BASIC_PLAN_PERIODS:
+                raise
+            limit = BASIC_PLAN_PERIODS
+            income = self._get("income-statement", symbol=ticker, period=period, limit=limit) or []
+            self.period_cap = limit
         balance = self._get("balance-sheet-statement", symbol=ticker, period=period, limit=limit) or []
         cash = self._get("cash-flow-statement", symbol=ticker, period=period, limit=limit) or []
         by_date: dict[str, dict] = {}

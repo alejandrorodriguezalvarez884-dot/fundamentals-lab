@@ -96,6 +96,10 @@ class Reporter:
             quarters = self.fmp.statements(ticker, "quarter", QUARTERS)
         except FmpUnavailable as exc:
             notes.append(f"Quarterly statements not available: {exc}")
+        cap = getattr(self.fmp, "period_cap", None)
+        if cap and sources.get("statements") == "FMP":
+            notes.append(f"The data plan gives {cap} periods of statements: {cap} years and {cap} quarters instead of "
+                         f"{ANNUAL_YEARS} and {QUARTERS}.")
 
         yield {"step": "prices", "detail": f"{PRICE_YEARS} years of daily prices for {ticker} and {BENCHMARK}"}
         start = (date.today() - timedelta(days=365 * PRICE_YEARS + 10)).isoformat()

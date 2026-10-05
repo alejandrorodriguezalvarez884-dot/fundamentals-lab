@@ -114,3 +114,22 @@ def test_sec_facts_take_annual_10k_values_and_latest_restatement():
     assert by_end["2023-09-30"]["net_income"] == 96.9e9  # the later filing wins
     assert by_end["2024-09-28"]["free_cash_flow"] == pytest.approx(118e9 - 9.4e9)
     assert by_end["2024-09-28"]["cash"] == 29.9e9
+
+
+def test_a_plan_with_a_short_history_is_asked_for_what_it_gives():
+    asked = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        limit = int(request.url.params["limit"])
+        asked.append((request.url.path.rsplit("/", 1)[-1], limit))
+        if limit > 5:
+            return httpx.Response(402, json={"Error Message": "Premium query parameter"})
+        return httpx.Response(200, json={"income-statement": INCOME, "balance-sheet-statement": BALANCE,
+                                         "cash-flow-statement": CASH}[request.url.path.rsplit("/", 1)[-1]])
+
+    fmp = FmpClient("test-key", httpx.Client(transport=httpx.MockTransport(handler)))
+    assert fmp.statements("AAPL", "annual", 10)[0]["revenue"] == 391035000000 and fmp.period_cap == 5
+    fmp.statements("AAPL", "quarter", 12)
+    assert asked == [("income-statement", 10), ("income-statement", 5), ("balance-sheet-statement", 5),
+                     ("cash-flow-statement", 5), ("income-statement", 5), ("balance-sheet-statement", 5),
+                     ("cash-flow-statement", 5)]

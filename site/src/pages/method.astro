@@ -1,0 +1,65 @@
+---
+import Page from "../components/Page.astro";
+
+const formulas = [
+	["TTM", "Flows (revenue, earnings, cash flow) summed over the last four reported quarters; balance sheet items from the last quarter. When four quarters are not available, the last fiscal year."],
+	["Enterprise value", "Market capitalisation + total debt − cash − short-term investments."],
+	["P/E", "Price ÷ diluted EPS. Left blank when EPS is zero or negative, because a P/E on losses means nothing."],
+	["EV/EBITDA, EV/Sales, EV/EBIT", "Enterprise value ÷ the trailing figure. Blank when the figure is not positive."],
+	["P/FCF, FCF yield", "Market capitalisation ÷ free cash flow, and its inverse. Free cash flow = operating cash flow − capital expenditure."],
+	["ROE", "Net income ÷ average shareholders' equity of the period and the one before. Blank when equity is not positive."],
+	["ROIC", "Operating income × (1 − effective tax rate) ÷ (equity + debt − cash). The effective rate is income tax ÷ pre-tax income, replaced by the 21% US statutory rate when it falls outside 0–50%."],
+	["Net debt / EBITDA", "Negative values mean net cash."],
+	["Historical multiples", "Each fiscal year's multiple at the closing price of its fiscal year end (or the last session before it), with that year's diluted share count and balance sheet."],
+	["Forward multiples", "Today's price (or enterprise value) ÷ the analysts' average estimate for each coming fiscal year. The P/E range uses the highest and lowest EPS estimates. PEG = next year's forward P/E ÷ (consensus EPS CAGR × 100)."],
+	["RSI", "Wilder's 14-day Relative Strength Index."],
+	["MACD", "12- and 26-day exponential averages, 9-day signal line."],
+	["Bollinger bands", "20-day average ± 2 standard deviations."],
+	["Beta", "Covariance of daily returns with the S&P 500 (SPY) over the last year ÷ the variance of SPY's."],
+	["Swing levels", "Lows and highs that are the extreme of five sessions on each side, over the last six months, grouped when within 1.5% of each other."],
+];
+---
+
+<Page title="Method" description="Where the numbers come from and how each one is computed.">
+	<div class="max-w-3xl">
+		<h1 class="font-serif text-3xl font-semibold tracking-tight text-stone-900">Sources and formulas</h1>
+		<p class="mt-4 text-stone-600">
+			Every figure on the site is computed by code from the data below, in the same way for every company. The AI reading is
+			written from those figures and only from them.
+		</p>
+
+		<h2 class="mt-10 font-serif text-xl font-semibold text-stone-900">Sources</h2>
+		<ul class="mt-3 list-disc space-y-2 pl-5 text-stone-600">
+			<li><strong class="text-stone-800">Financial Modeling Prep</strong>: company profile, income statement, balance sheet and cash flow (annual and quarterly), daily prices adjusted for splits and dividends, and the analysts' consensus estimates.</li>
+			<li><strong class="text-stone-800">SEC EDGAR</strong>: the list of US-listed companies behind the search, and the XBRL facts of 10-K filings as a fallback for the annual statements.</li>
+			<li><strong class="text-stone-800">Claude (Anthropic)</strong>: the AI reading.</li>
+		</ul>
+		<p class="mt-3 text-sm text-stone-500">A report is kept for twelve hours; an AI reading for the day. Figures follow each company's fiscal year, which does not always end in December.</p>
+
+		<h2 class="mt-10 font-serif text-xl font-semibold text-stone-900">Formulas</h2>
+		<dl class="mt-3 divide-y divide-stone-200 rounded-2xl border border-stone-200 bg-white">
+			{formulas.map(([term, text]) => (
+				<div class="grid gap-1 p-4 sm:grid-cols-[12rem_1fr] sm:gap-4">
+					<dt class="font-medium text-stone-900">{term}</dt>
+					<dd class="text-sm leading-relaxed text-stone-600">{text}</dd>
+				</div>
+			))}
+		</dl>
+
+		<h2 class="mt-10 font-serif text-xl font-semibold text-stone-900">The AI reading</h2>
+		<p class="mt-3 text-stone-600">
+			The model receives a compact document with the figures of the page (no chart series) and writes what they show: growth,
+			profitability, balance sheet, valuation against its own history and the consensus, and price behaviour, plus a few points
+			worth checking. It is instructed to use only those numbers, to describe rather than advise, not to forecast prices and not to
+			call a stock cheap or expensive. It can still be wrong: the figures on the page are the reference.
+		</p>
+
+		<h2 class="mt-10 font-serif text-xl font-semibold text-stone-900">What this is not</h2>
+		<p class="mt-3 text-stone-600">
+			This site describes numbers. It does not recommend buying, selling or holding any security, does not set price targets and
+			does not forecast returns. Forward multiples are the published consensus of the analysts at today's price, which the
+			company may or may not meet. Technical indicators describe past prices. Data from third parties may be delayed or contain
+			errors.
+		</p>
+	</div>
+</Page>

@@ -5,8 +5,9 @@
 # service scales to zero: it costs nothing while nobody uses it.
 #
 # Requirements: the gcloud CLI logged in on a project with billing enabled, and .env with
-# FMP_API_KEY and SEC_USER_AGENT. ANTHROPIC_API_KEY switches the AI reading on; without it the
-# secret already in Secret Manager is kept, and if there is none the reading stays off.
+# FMP_API_KEY and SEC_USER_AGENT. The AI reading takes its Anthropic key from Secret Manager:
+# ANTHROPIC_SECRET names the secret (default fundamentals-lab-anthropic-api-key). A key in
+# ANTHROPIC_API_KEY is stored there first; with no key and no secret the reading stays off.
 # HUB_URL (the Market Hub address) admits only people signed in there: the service reads the
 # hub's session cookie with the hub's secret (Secret Manager: market-hub-session-secret).
 #
@@ -43,6 +44,8 @@ ANTHROPIC_KEY="$(env_value ANTHROPIC_API_KEY)"
 FMP_KEY="$(env_value FMP_API_KEY)"
 SEC_USER_AGENT="$(env_value SEC_USER_AGENT)"
 HUB_URL="$(env_value HUB_URL)"
+ANTHROPIC_SECRET="${ANTHROPIC_SECRET:-$(env_value ANTHROPIC_SECRET)}"
+ANTHROPIC_SECRET="${ANTHROPIC_SECRET:-fundamentals-lab-anthropic-api-key}"
 [[ -n "$FMP_KEY" ]] || fail "FMP_API_KEY is empty in $ENV_FILE."
 [[ "$SEC_USER_AGENT" == *@* ]] || fail "SEC_USER_AGENT in $ENV_FILE needs a contact email."
 
@@ -74,12 +77,13 @@ echo "→ Secrets"
 SECRETS="FMP_API_KEY=fundamentals-lab-fmp-api-key:latest"
 put_secret fundamentals-lab-fmp-api-key "$FMP_KEY"
 if [[ -n "$ANTHROPIC_KEY" ]]; then
-  put_secret fundamentals-lab-anthropic-api-key "$ANTHROPIC_KEY"
+  put_secret "$ANTHROPIC_SECRET" "$ANTHROPIC_KEY"
 fi
-if gcp secrets describe fundamentals-lab-anthropic-api-key >/dev/null 2>&1; then
-  gcp secrets add-iam-policy-binding fundamentals-lab-anthropic-api-key \
+if gcp secrets describe "$ANTHROPIC_SECRET" >/dev/null 2>&1; then
+  gcp secrets add-iam-policy-binding "$ANTHROPIC_SECRET" \
     --member "serviceAccount:$SERVICE_ACCOUNT" --role roles/secretmanager.secretAccessor >/dev/null
-  SECRETS="$SECRETS,ANTHROPIC_API_KEY=fundamentals-lab-anthropic-api-key:latest"
+  SECRETS="$SECRETS,ANTHROPIC_API_KEY=$ANTHROPIC_SECRET:latest"
+  echo "→ AI reading on, key from the secret $ANTHROPIC_SECRET"
 else
   echo "note: no Anthropic key anywhere: the AI reading stays off."
 fi

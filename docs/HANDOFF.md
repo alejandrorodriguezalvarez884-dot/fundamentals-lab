@@ -25,6 +25,9 @@ Decisiones del usuario ese día:
 
 ## Dónde estamos
 
+> 2026-10-06: `site/src/components/HubNav.astro` lleva dos enlaces más de My Hub, `Analysis` y
+> `Community` (páginas nuevas del portal), igual que `App.astro` de `market-hub-landing`. Sin desplegar.
+
 | Hecho | Pendiente |
 |---|---|
 | Backend en `src/fundamentals/`: FMP (`fmp.py`), SEC (`sec.py`, buscador y estados anuales de respaldo), ratios y múltiplos (`metrics.py`), múltiplos futuros (`forward.py`), técnico (`technical.py`), informe (`report.py`), comparador (`compare.py`), lectura con Claude (`reading.py`), topes (`budget.py`), API (`api.py`), CLI (`cli.py`) | **Nada se ha probado contra las APIs reales**: la red del entorno donde se escribió bloqueaba FMP y la SEC |

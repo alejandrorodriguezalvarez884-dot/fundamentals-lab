@@ -63,6 +63,19 @@ secciones ya no son cajas (`card()` dibuja una regla y un título). 47 tests y `
 verde; revisado en local con el informe de AAPL guardado. El gráfico técnico se puede ver en velas o
 en línea. Sin revisar: el comparador con datos y la web con sesión iniciada.
 
+### Dentro de My Hub (2026-10-06)
+
+El usuario pidió que la herramienta quede integrada en el área privada del portal, porque solo se
+consulta desde ahí. La cabecera pública del portal ya no la nombra.
+
+- `components/HubNav.astro` sustituye a `HubBar.astro`: es la navegación de My Hub (la misma que
+  `App.astro` en `market-hub-landing`): barra lateral en pantallas anchas con "Your space", "Tools"
+  (esta marcada) y "Explore", el aviso de área privada y el usuario abajo; en pantallas estrechas,
+  una barra arriba. Sigue redirigiendo al login del portal si la sesión caduca. Cerrar sesión se
+  hace en el portal.
+- `Page.astro`: encima de cada página queda la barra propia de la herramienta (nombre, `Company ·
+  Compare · Method` y el buscador). Un cambio en la navegación de My Hub se hace en los tres repos.
+
 ### Coste estimado de la lectura con IA
 
 Medido sobre los datos sintéticos: el documento de una empresa ocupa unos 4.400 caracteres (unos

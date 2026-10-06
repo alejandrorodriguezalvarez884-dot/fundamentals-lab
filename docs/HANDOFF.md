@@ -25,6 +25,17 @@ Decisiones del usuario ese día:
 
 ## Dónde estamos
 
+> 2026-10-06: **la ficha da "A data source did not answer" cuando FMP agota la cuota.** Comprobado
+> ese día: FMP responde 429 ("Limit Reach") a `profile` con la clave de `.env`, que es la misma
+> del servicio desplegado; en los logs, cinco `upstream failure for AAPL: UpstreamError`. Vuelve
+> sola cuando FMP renueva la cuota diaria (250 llamadas en el plan gratuito). **Sin arreglar, dos
+> cambios propuestos y no hechos:** que un 429 o un 5xx de FMP en perfil, trimestrales, precios y
+> estimaciones se trate como `FmpUnavailable` (`report.py` solo captura esa excepción ahí, así
+> que hoy tumba la ficha en vez de seguir con una nota), y que `_failure` en `api.py` registre la
+> fuente y el código, sin el cuerpo. Sobre los datos: el usuario estudia pasar a FMP Starter
+> (22 $/mes con pago anual, tiempo real, 300 llamadas/min) y ha redactado una petición a FMP de
+> un acuerdo de licencia para mostrar datos; no ha decidido nada todavía.
+
 > 2026-10-06: `scripts/deploy-cloudrun.sh` ya solo escribe un permiso cuando falta (`grant`): antes cada
 > despliegue reescribía la política IAM del proyecto y dos a la vez chocaban ("concurrent policy
 > changes"). Ahora los despliegues de los tres servicios pueden lanzarse en paralelo. Comprobado

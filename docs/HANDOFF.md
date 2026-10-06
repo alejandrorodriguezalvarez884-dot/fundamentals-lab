@@ -63,7 +63,7 @@ secciones ya no son cajas (`card()` dibuja una regla y un título). 47 tests y `
 verde; revisado en local con el informe de AAPL guardado. El gráfico técnico se puede ver en velas o
 en línea. Sin revisar: el comparador con datos y la web con sesión iniciada.
 
-### Dentro de My Hub (2026-10-06; desplegado como `fundamentals-lab-00006-tzd`)
+### Dentro de My Hub (2026-10-06; última revisión desplegada: `fundamentals-lab-00008-q2k`)
 
 El usuario pidió que la herramienta quede integrada en el área privada del portal, porque solo se
 consulta desde ahí. La cabecera pública del portal ya no la nombra.

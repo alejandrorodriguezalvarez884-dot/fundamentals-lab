@@ -82,6 +82,9 @@ Decisiones del usuario ese día:
 
 > 2026-10-06: `site/src/components/HubNav.astro` lleva dos enlaces más de My Hub, `Analysis` y
 > `Community` (páginas nuevas del portal), igual que `App.astro` de `market-hub-landing`. Desplegado el mismo día.
+>
+> 2026-10-07: y uno más, `Watchlist`, entre `Analysis` y `Community` (la página nueva del portal,
+> `/watchlist/`). En `main`, **sin desplegar**: hasta que se despliegue, la barra de aquí no lo enseña.
 
 | Hecho | Pendiente |
 |---|---|

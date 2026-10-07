@@ -25,6 +25,11 @@ Decisiones del usuario ese día:
 
 ## Dónde estamos
 
+> 2026-10-07: **visitas con Cloudflare Web Analytics** (sin cookies). `site/src/layouts/Layout.astro`
+> carga su script solo en `themarkethub.app` y sus subdominios, con el token del sitio de Market Hub
+> (uno para todo el dominio; va en el HTML, no es un secreto). La página de privacidad del portal
+> lo dice. En `main`, sin desplegar. Se mira en Cloudflare: Analytics & Logs → Web Analytics.
+
 > 2026-10-06: **la ficha da "A data source did not answer" cuando FMP agota la cuota.** Comprobado
 > ese día: FMP responde 429 ("Limit Reach") a `profile` con la clave de `.env`, que es la misma
 > del servicio desplegado; en los logs, cinco `upstream failure for AAPL: UpstreamError`. Vuelve

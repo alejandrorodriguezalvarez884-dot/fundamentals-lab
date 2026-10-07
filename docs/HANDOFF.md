@@ -28,7 +28,9 @@ Decisiones del usuario ese día:
 > 2026-10-07: **visitas con Cloudflare Web Analytics** (sin cookies). `site/src/layouts/Layout.astro`
 > carga su script solo en `themarkethub.app` y sus subdominios, con el token del sitio de Market Hub
 > (uno para todo el dominio; va en el HTML, no es un secreto). La página de privacidad del portal
-> lo dice. En `main`, sin desplegar. Se mira en Cloudflare: Analytics & Logs → Web Analytics.
+> lo dice. Desplegado el 2026-10-07 como `fundamentals-lab-00011-kmr` (variables, topes y secretos
+> iguales que antes; comprobado: responde, pide sesión y el HTML lleva el script). Se mira en
+> Cloudflare: Analytics & Logs → Web Analytics.
 
 > 2026-10-06: **la ficha da "A data source did not answer" cuando FMP agota la cuota.** Comprobado
 > ese día: FMP responde 429 ("Limit Reach") a `profile` con la clave de `.env`, que es la misma

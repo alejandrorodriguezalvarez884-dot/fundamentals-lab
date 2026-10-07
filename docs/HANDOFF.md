@@ -25,7 +25,8 @@ Decisiones del usuario ese día:
 
 ## Dónde estamos
 
-> 2026-10-07: **los datos salen de Yahoo Finance (`yfinance`), no de FMP** (en `main`, sin desplegar).
+> 2026-10-07: **los datos salen de Yahoo Finance (`yfinance`), no de FMP** (desplegado ese día como
+> `fundamentals-lab-00012-c98`, con el histórico largo de la SEC; topes y configuración como estaban).
 > Decisión del usuario: FMP no contestó a su petición de licencia y la cuota gratuita (250 llamadas
 > al día) tumbaba la ficha; pidió "los últimos datos disponibles gratis". `src/fundamentals/yahoo.py`
 > (`YahooClient`) da las mismas cuatro respuestas que `FmpClient` con los nombres propios del
@@ -49,8 +50,9 @@ Decisiones del usuario ese día:
 >   SEC traen menos líneas (sin coste de ventas ni existencias, por ejemplo). **Los trimestres
 >   siguen siendo los 5 de Yahoo**: sacarlos de los 10-Q es el paso siguiente, sin hacer.
 > - **Avisado al usuario, que decidió seguir**: yfinance no es una API oficial, las condiciones de
->   Yahoo son de uso personal, y Yahoo puede rechazar las IP de un centro de datos. **Sin comprobar
->   desde Cloud Run**; si allí falla, `MARKET_DATA=fmp` y redesplegar.
+>   Yahoo son de uso personal, y Yahoo puede rechazar las IP de un centro de datos. Desde Cloud Run Yahoo
+>   responde en el portal; aquí **falta verlo con una sesión real** (el servicio pide login). Si
+>   falla, `MARKET_DATA=fmp` y redesplegar.
 > - Comprobado contra Yahoo desde el equipo Windows: Apple (9,7 s en frío, con la carga de pandas),
 >   NVIDIA y JPMorgan (2 s cada una); trimestres colocados en su año fiscal (NVIDIA cierra en enero).
 >   60 tests en verde (`tests/test_yahoo.py` y `tests/test_backfill.py`, sin red). La página Method nombra la fuente nueva.

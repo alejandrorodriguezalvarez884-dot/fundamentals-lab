@@ -28,7 +28,7 @@ Es una pieza del portal de herramientas de IA para inversión del autor, junto a
 
 | Qué | De dónde |
 |---|---|
-| Perfil, estados financieros, precios diarios y consenso de analistas | Financial Modeling Prep (API `stable`) |
+| Perfil, estados financieros, precios diarios y consenso de analistas | Yahoo Finance (`yfinance`); FMP con `MARKET_DATA=fmp` |
 | Lista de empresas del buscador; estados anuales de respaldo | SEC EDGAR (`company_tickers.json` y XBRL `companyfacts`) |
 | Lectura de los números | Claude (API de Anthropic) |
 

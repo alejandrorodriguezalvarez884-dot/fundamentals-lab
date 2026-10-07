@@ -12,6 +12,7 @@ dependencies = [
     "itsdangerous>=2.2.0",
     "python-dotenv>=1.2.4",
     "uvicorn>=0.54.0",
+    "yfinance>=1.7.0",
 ]
 
 [project.scripts]

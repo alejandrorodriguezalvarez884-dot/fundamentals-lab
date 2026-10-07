@@ -9,11 +9,12 @@ from datetime import date, datetime, timedelta, timezone
 
 from . import metrics, technical
 from .config import ANNUAL_YEARS, BENCHMARK, PRICE_YEARS, QUARTERS, REPORT_TTL_HOURS
-from .fmp import FmpClient, FmpUnavailable
+from .fmp import FmpClient, SourceUnavailable
 from .http import UpstreamError
 from .forward import forward_multiples
 from .sec import Company, fetch_annual
 from .store import Store
+from .yahoo import default_source
 
 log = logging.getLogger("fundamentals.report")
 
@@ -38,7 +39,7 @@ def _fresh(report: dict | None, hours: float = REPORT_TTL_HOURS) -> bool:
 class Reporter:
     def __init__(self, store: Store, fmp: FmpClient | None = None, sec_annual=fetch_annual):
         self.store = store
-        self.fmp = fmp or FmpClient()
+        self.fmp = fmp or default_source()  # the source of market data: Yahoo, or FMP
         self.sec_annual = sec_annual
 
     def cached(self, ticker: str) -> dict | None:
@@ -62,6 +63,7 @@ class Reporter:
             return
 
         ticker = company.ticker
+        source = getattr(self.fmp, "name", "FMP")
         sources: dict[str, str] = {}
         notes: list[str] = []
         profile: dict = {}
@@ -71,19 +73,19 @@ class Reporter:
         yield {"step": "profile", "detail": "Company profile and price"}
         try:
             profile = self.fmp.profile(ticker)
-            sources["profile"] = "FMP"
-        except FmpUnavailable as exc:
+            sources["profile"] = source
+        except SourceUnavailable as exc:
             notes.append(f"Profile not available: {exc}")
         profile = {"ticker": ticker, "name": company.name, "cik": company.cik, **{k: v for k, v in profile.items() if v not in (None, "")}}
 
         yield {"step": "statements", "detail": f"Income statement, balance sheet and cash flow ({ANNUAL_YEARS} years, {QUARTERS} quarters)"}
         try:
             annual = self.fmp.statements(ticker, "annual", ANNUAL_YEARS)
-            sources["statements"] = "FMP"
-        except (FmpUnavailable, UpstreamError) as exc:
+            sources["statements"] = source
+        except (SourceUnavailable, UpstreamError) as exc:
             # The visitor sees the notes: never put an upstream error body in them.
-            log.warning("FMP statements for %s failed: %s", ticker, type(exc).__name__)
-            notes.append("Statements from FMP were not available; using the SEC XBRL filings.")
+            log.warning("%s statements for %s failed: %s", source, ticker, type(exc).__name__)
+            notes.append(f"Statements from {source} were not available; using the SEC XBRL filings.")
         if not annual:
             try:
                 annual = self.sec_annual(company.cik, ANNUAL_YEARS)
@@ -94,12 +96,15 @@ class Reporter:
             raise NoData(ticker)
         try:
             quarters = self.fmp.statements(ticker, "quarter", QUARTERS)
-        except FmpUnavailable as exc:
+        except SourceUnavailable as exc:
             notes.append(f"Quarterly statements not available: {exc}")
         cap = getattr(self.fmp, "period_cap", None)
-        if cap and sources.get("statements") == "FMP":
+        if cap and sources.get("statements") == source:
             notes.append(f"The data plan gives {cap} periods of statements: {cap} years and {cap} quarters instead of "
                          f"{ANNUAL_YEARS} and {QUARTERS}.")
+        depth = getattr(self.fmp, "depth_note", None)
+        if depth and sources.get("statements") == source:
+            notes.append(depth)
 
         yield {"step": "prices", "detail": f"{PRICE_YEARS} years of daily prices for {ticker} and {BENCHMARK}"}
         start = (date.today() - timedelta(days=365 * PRICE_YEARS + 10)).isoformat()
@@ -108,8 +113,8 @@ class Reporter:
         try:
             bars = self.fmp.prices(ticker, start)
             bench = self.benchmark(start)
-            sources["prices"] = "FMP"
-        except FmpUnavailable as exc:
+            sources["prices"] = source
+        except SourceUnavailable as exc:
             notes.append(f"Prices not available: {exc}")
         if bars and profile.get("price") is None:
             profile["price"] = bars[-1]["close"]
@@ -118,8 +123,8 @@ class Reporter:
         estimates: list[dict] = []
         try:
             estimates = self.fmp.estimates(ticker)
-            sources["estimates"] = "FMP"
-        except FmpUnavailable as exc:
+            sources["estimates"] = source
+        except SourceUnavailable as exc:
             notes.append(f"Analyst estimates not available: {exc}")
 
         yield {"step": "compute", "detail": "Ratios, multiples and indicators"}

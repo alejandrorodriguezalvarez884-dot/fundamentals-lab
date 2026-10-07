@@ -40,7 +40,7 @@ Las fórmulas están en la página `/method/` del sitio y en `src/fundamentals/m
 ```bash
 uv sync                  # Python 3.12 y dependencias
 cd site && npm ci && cd ..
-cp .env.example .env     # ANTHROPIC_API_KEY, FMP_API_KEY, SEC_USER_AGENT
+cp .env.example .env     # ANTHROPIC_API_KEY, SEC_USER_AGENT (los datos salen de Yahoo Finance, sin clave)
 make test                # tests en verde, sin red
 make api                 # API en :8000
 make dev                 # web en :4321 (en otra terminal)

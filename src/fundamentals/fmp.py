@@ -16,7 +16,11 @@ from .config import FMP_BASE
 from .http import UpstreamError, get_json
 
 
-class FmpUnavailable(Exception):
+class SourceUnavailable(Exception):
+    """The source of market data has no answer to what was asked."""
+
+
+class FmpUnavailable(SourceUnavailable):
     """No FMP key, or the plan does not include what was asked."""
 
 
@@ -51,6 +55,8 @@ BASIC_PLAN_PERIODS = 5
 
 
 class FmpClient:
+    name = "FMP"
+
     def __init__(self, api_key: str | None = None, client: httpx.Client | None = None):
         self.api_key = api_key if api_key is not None else os.environ.get("FMP_API_KEY", "").strip()
         # Set once the plan has refused a longer history and answered a shorter one: later

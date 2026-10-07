@@ -25,6 +25,27 @@ Decisiones del usuario ese día:
 
 ## Dónde estamos
 
+> 2026-10-07: **los datos salen de Yahoo Finance (`yfinance`), no de FMP** (en `main`, sin desplegar).
+> Decisión del usuario: FMP no contestó a su petición de licencia y la cuota gratuita (250 llamadas
+> al día) tumbaba la ficha; pidió "los últimos datos disponibles gratis". `src/fundamentals/yahoo.py`
+> (`YahooClient`) da las mismas cuatro respuestas que `FmpClient` con los nombres propios del
+> proyecto: perfil, estados (anuales y trimestrales), precios ajustados y consenso. `MARKET_DATA`
+> elige: `yahoo` (por defecto) o `fmp` (como antes); `make deploy` ya no exige la clave de FMP.
+> Con ello se cierra de paso el fallo del 429 de FMP de la nota siguiente.
+> - **Lo que cambia en la ficha**: Yahoo da **4 años fiscales y 5 trimestres** (la ficha lo dice en
+>   una nota; con FMP gratuito eran 5 y 5), así que el crecimiento a 5 y 10 años sale vacío. El
+>   consenso es solo de **ventas y BPA, para el año fiscal en curso y el siguiente**: no hay
+>   EV/EBITDA futuro. La SEC sigue de respaldo para los estados anuales.
+> - No se alargó el histórico anual con la SEC: sus BPA antiguos no están ajustados por splits
+>   (Apple 2016-2017), y mezclarlos falsearía el crecimiento por acción. Posible mejora: usar la SEC
+>   solo para las líneas que no son por acción.
+> - **Avisado al usuario, que decidió seguir**: yfinance no es una API oficial, las condiciones de
+>   Yahoo son de uso personal, y Yahoo puede rechazar las IP de un centro de datos. **Sin comprobar
+>   desde Cloud Run**; si allí falla, `MARKET_DATA=fmp` y redesplegar.
+> - Comprobado contra Yahoo desde el equipo Windows: Apple (9,7 s en frío, con la carga de pandas),
+>   NVIDIA y JPMorgan (2 s cada una); trimestres colocados en su año fiscal (NVIDIA cierra en enero).
+>   53 tests en verde (`tests/test_yahoo.py`, sin red). La página Method nombra la fuente nueva.
+
 > 2026-10-07: **visitas con Cloudflare Web Analytics** (sin cookies). `site/src/layouts/Layout.astro`
 > carga su script solo en `themarkethub.app` y sus subdominios, con el token del sitio de Market Hub
 > (uno para todo el dominio; va en el HTML, no es un secreto). La página de privacidad del portal

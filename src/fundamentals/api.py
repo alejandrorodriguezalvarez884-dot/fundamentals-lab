@@ -34,7 +34,7 @@ from fastapi.staticfiles import StaticFiles
 from .budget import Budget, BudgetReached
 from .compare import compare
 from .config import COMPARE_MAX, COMPARE_MIN, PER_IP_PER_HOUR
-from .fmp import FmpClient, FmpUnavailable
+from .fmp import SourceUnavailable
 from .hubauth import HubGate
 from .hubauth import settings as hub_settings
 from .http import UpstreamError
@@ -88,8 +88,8 @@ def _failure(exc: Exception, ticker: str = "") -> HTTPException:
         return HTTPException(503, "The AI reading is not switched on yet. The numbers and charts work.")
     if isinstance(exc, ReadingRefused):
         return HTTPException(502, "The model could not write a reading for this request.")
-    if isinstance(exc, FmpUnavailable):
-        log.warning("FMP unavailable for %s", ticker)
+    if isinstance(exc, SourceUnavailable):
+        log.warning("market data unavailable for %s", ticker)
         return HTTPException(503, "The market data provider is not available right now.")
     if isinstance(exc, (UpstreamError, httpx.HTTPError, anthropic.APIConnectionError, anthropic.APIStatusError)):
         log.warning("upstream failure for %s: %s", ticker, type(exc).__name__)
@@ -118,8 +118,8 @@ def create_app(store: Store | None = None, directory: Directory | None = None,
     default it comes from HUB_URL and HUB_SESSION_SECRET, and None leaves the service public."""
     logging.basicConfig(level=logging.INFO)
     # httpx logs every request URL at INFO, and FMP takes the key in the query string: keep the
-    # key out of the logs.
-    for noisy in ("httpx", "httpcore"):
+    # key out of the logs. yfinance prints what Yahoo answers when it has no such symbol.
+    for noisy in ("httpx", "httpcore", "yfinance"):
         logging.getLogger(noisy).setLevel(logging.WARNING)
     app = FastAPI(title="Fundamentals Lab", docs_url=None, redoc_url=None, openapi_url=None)
 
@@ -132,7 +132,7 @@ def create_app(store: Store | None = None, directory: Directory | None = None,
 
     store = store or default_store()
     directory = directory or Directory()
-    reporter = reporter or Reporter(store, FmpClient())
+    reporter = reporter or Reporter(store)
     reader = reader or Reader(store, Budget(store))
     data_limiter = RateLimiter(PER_IP_PER_HOUR * 4)  # reports cost provider quota, not money
     reading_limiter = RateLimiter(PER_IP_PER_HOUR)

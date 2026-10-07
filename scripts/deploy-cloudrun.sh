@@ -5,7 +5,8 @@
 # service scales to zero: it costs nothing while nobody uses it.
 #
 # Requirements: the gcloud CLI logged in on a project with billing enabled, and .env with
-# FMP_API_KEY and SEC_USER_AGENT. The AI reading takes its Anthropic key from Secret Manager:
+# SEC_USER_AGENT. The numbers come from Yahoo Finance, which takes no key; MARKET_DATA=fmp in .env
+# reads them from FMP instead, with FMP_API_KEY. The AI reading takes its Anthropic key from Secret Manager:
 # ANTHROPIC_SECRET names the secret (default fundamentals-lab-anthropic-api-key). A key in
 # ANTHROPIC_API_KEY is stored there first; with no key and no secret the reading stays off.
 # HUB_URL (the Market Hub address) admits only people signed in there: the service reads the
@@ -42,11 +43,12 @@ BUCKET="${FUNDAMENTALS_BUCKET:-${GCP_PROJECT}-fundamentals-lab}"
 env_value() { grep -E "^$1=" "$ENV_FILE" | tail -1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//' || true; }
 ANTHROPIC_KEY="$(env_value ANTHROPIC_API_KEY)"
 FMP_KEY="$(env_value FMP_API_KEY)"
+MARKET_DATA="$(env_value MARKET_DATA)"
 SEC_USER_AGENT="$(env_value SEC_USER_AGENT)"
 HUB_URL="$(env_value HUB_URL)"
 ANTHROPIC_SECRET="${ANTHROPIC_SECRET:-$(env_value ANTHROPIC_SECRET)}"
 ANTHROPIC_SECRET="${ANTHROPIC_SECRET:-fundamentals-lab-anthropic-api-key}"
-[[ -n "$FMP_KEY" ]] || fail "FMP_API_KEY is empty in $ENV_FILE."
+[[ -n "$FMP_KEY" || "$MARKET_DATA" != "fmp" ]] || fail "MARKET_DATA=fmp needs FMP_API_KEY in $ENV_FILE."
 [[ "$SEC_USER_AGENT" == *@* ]] || fail "SEC_USER_AGENT in $ENV_FILE needs a contact email."
 
 gcp() { gcloud --project "$GCP_PROJECT" --quiet "$@"; }
@@ -91,8 +93,11 @@ put_secret() {
   grant secrets "$name" roles/secretmanager.secretAccessor
 }
 echo "→ Secrets"
-SECRETS="FMP_API_KEY=fundamentals-lab-fmp-api-key:latest"
-put_secret fundamentals-lab-fmp-api-key "$FMP_KEY"
+SECRETS=""
+if [[ -n "$FMP_KEY" ]]; then
+  put_secret fundamentals-lab-fmp-api-key "$FMP_KEY"
+  SECRETS="FMP_API_KEY=fundamentals-lab-fmp-api-key:latest"
+fi
 if [[ -n "$ANTHROPIC_KEY" ]]; then
   put_secret "$ANTHROPIC_SECRET" "$ANTHROPIC_KEY"
 fi
@@ -131,8 +136,8 @@ gcp run deploy "$SERVICE_NAME" \
   --min-instances 0 \
   --max-instances "$MAX_INSTANCES" \
   --timeout 120 \
-  --set-secrets "$SECRETS" \
-  --set-env-vars "^|^SEC_USER_AGENT=$SEC_USER_AGENT|FUNDAMENTALS_BUCKET=$BUCKET|READING_DAILY_MAX_USD=$READING_DAILY_MAX_USD|READING_TOTAL_MAX_USD=$READING_TOTAL_MAX_USD|READING_MODEL=$READING_MODEL$HUB_ENV"
+  --set-secrets "${SECRETS#,}" \
+  --set-env-vars "^|^SEC_USER_AGENT=$SEC_USER_AGENT|FUNDAMENTALS_BUCKET=$BUCKET|READING_DAILY_MAX_USD=$READING_DAILY_MAX_USD|READING_TOTAL_MAX_USD=$READING_TOTAL_MAX_USD|READING_MODEL=$READING_MODEL|MARKET_DATA=${MARKET_DATA:-yahoo}$HUB_ENV"
 
 URL="$(gcp run services describe "$SERVICE_NAME" --region "$GCP_REGION" --format 'value(status.url)')"
 if curl -fsS "$URL/api/health" >/dev/null 2>&1; then

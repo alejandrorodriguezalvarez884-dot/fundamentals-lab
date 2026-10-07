@@ -82,6 +82,11 @@ class FakeTicker:
         return pd.DataFrame({"avg": [1.1e11, 1.5e11, 4.78e11, 5.28e11], "low": [1.1e11, 1.3e11, 4.72e11, 4.98e11],
                              "high": [1.2e11, 1.7e11, 4.84e11, 5.95e11], "numberOfAnalysts": [27, 19, 40, 40]}, index=["0q", "+1q", "0y", "+1y"])
 
+    @property
+    def splits(self):
+        self._known("splits")
+        return pd.Series([4.0], index=[pd.Timestamp("2020-08-31", tz="America/New_York")])
+
     def history(self, start, interval, auto_adjust, actions):
         self._known("prices")
         assert auto_adjust is True  # adjusted for splits and dividends
@@ -145,8 +150,12 @@ def test_what_yahoo_does_not_have_or_does_not_answer():
     assert "Too Many" not in str(failed.value)  # what the visitor reads carries nothing of the provider's answer
 
 
+def no_filings(cik, years):
+    raise RuntimeError("the SEC is not answering")
+
+
 def test_a_report_built_from_yahoo(directory, store):
-    report = Reporter(store, YahooClient(FakeYf())).build(directory.get("AAPL"))
+    report = Reporter(store, YahooClient(FakeYf()), sec_annual=no_filings).build(directory.get("AAPL"))
     assert set(report["sources"].values()) == {"Yahoo Finance"}
     assert report["notes"] == ["Yahoo Finance gives four fiscal years and five quarters of statements."]
     assert len(report["annual"]) == 4 and len(report["quarters"]) == 5
@@ -155,6 +164,31 @@ def test_a_report_built_from_yahoo(directory, store):
     assert forward["available"] and [y["fiscal_year"] for y in forward["years"]] == ["2026", "2027"]
     assert forward["years"][0]["pe"] == pytest.approx(333.63 / 8.82) and forward["years"][0]["ev_ebitda"] is None
     assert report["technical"]["available"]
+
+
+def test_the_older_years_come_from_the_sec(directory, store):
+    def filings(cik, years):
+        """Seven fiscal years as the SEC has them: the last four are Yahoo's, dated the day the books closed."""
+        rows = []
+        for i, year in enumerate(range(2019, 2026)):
+            scale = 70.0 + 10 * i
+            # 2019 was last filed before the split of August 2020: four times fewer shares, four times the earnings each.
+            old = year == 2019
+            rows.append({"date": f"{year}-09-2{i}", "fiscal_year": str(year), "period": "FY", "currency": "USD",
+                         "revenue": scale * 1e9, "net_income": scale * 0.24e9, "eps_diluted": scale * 0.016 * (4 if old else 1),
+                         "shares_diluted": 15e9 / (4 if old else 1), "operating_cash_flow": 110e9, "capex": 12e9, "free_cash_flow": 98e9,
+                         "per_share_filed": {"eps_diluted": f"{year}-10-30" if old else f"{year + 1}-10-30",
+                                             "shares_diluted": f"{year}-10-30" if old else f"{year + 1}-10-30"}})
+        return rows[-years:]
+
+    yf = FakeYf()
+    report = Reporter(store, YahooClient(yf), sec_annual=filings).build(directory.get("AAPL"))
+    assert report["sources"]["statements"] == "Yahoo Finance; SEC EDGAR (XBRL) before fiscal 2022" and report["notes"] == []
+    assert [a["fiscal_year"] for a in report["annual"]] == [str(y) for y in range(2019, 2026)]
+    first = report["annual"][0]
+    assert first["eps_diluted"] == pytest.approx(70 * 0.016) and first["shares_diluted"] == 15e9 and "per_share_filed" not in first
+    assert report["growth"]["revenue"]["5y"] == pytest.approx((130 / 80) ** (1 / 5) - 1)
+    assert report["growth"]["eps_diluted"]["5y"] is not None and "splits" in yf.calls
 
 
 def test_yahoo_is_the_source_unless_the_environment_names_fmp(monkeypatch):

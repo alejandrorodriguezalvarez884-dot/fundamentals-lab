@@ -8,6 +8,7 @@ from collections.abc import Iterator
 from datetime import date, datetime, timedelta, timezone
 
 from . import metrics, technical
+from .backfill import backfill
 from .config import ANNUAL_YEARS, BENCHMARK, PRICE_YEARS, QUARTERS, REPORT_TTL_HOURS
 from .fmp import FmpClient, SourceUnavailable
 from .http import UpstreamError
@@ -88,12 +89,24 @@ class Reporter:
             notes.append(f"Statements from {source} were not available; using the SEC XBRL filings.")
         if not annual:
             try:
-                annual = self.sec_annual(company.cik, ANNUAL_YEARS)
+                annual = [{k: v for k, v in row.items() if k != "per_share_filed"} for row in self.sec_annual(company.cik, ANNUAL_YEARS)]
                 sources["statements"] = "SEC EDGAR (XBRL)"
             except Exception as exc:  # noqa: BLE001 - the fallback must not hide the main error
                 log.warning("SEC facts for %s failed: %s", ticker, type(exc).__name__)
         if not annual:
             raise NoData(ticker)
+        # A source with a short history (Yahoo: four fiscal years) gets the older years from the
+        # SEC, when the two agree on the years they share. One year more than the report shows,
+        # so growth over ten years has its first year.
+        if sources.get("statements") == source and hasattr(self.fmp, "splits") and len(annual) <= ANNUAL_YEARS:
+            try:
+                longer = backfill(annual, self.sec_annual(company.cik, ANNUAL_YEARS + 1), self.fmp.splits(ticker), ANNUAL_YEARS + 1)
+            except Exception as exc:  # noqa: BLE001 - a longer history is an extra: the report stands without it
+                log.warning("longer history for %s failed: %s", ticker, type(exc).__name__)
+                longer = annual
+            if len(longer) > len(annual):
+                sources["statements"] = f"{source}; SEC EDGAR (XBRL) before fiscal {annual[0]['fiscal_year']}"
+                annual = longer
         try:
             quarters = self.fmp.statements(ticker, "quarter", QUARTERS)
         except SourceUnavailable as exc:

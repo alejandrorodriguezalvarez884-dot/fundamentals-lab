@@ -32,19 +32,28 @@ Decisiones del usuario ese día:
 > proyecto: perfil, estados (anuales y trimestrales), precios ajustados y consenso. `MARKET_DATA`
 > elige: `yahoo` (por defecto) o `fmp` (como antes); `make deploy` ya no exige la clave de FMP.
 > Con ello se cierra de paso el fallo del 429 de FMP de la nota siguiente.
-> - **Lo que cambia en la ficha**: Yahoo da **4 años fiscales y 5 trimestres** (la ficha lo dice en
->   una nota; con FMP gratuito eran 5 y 5), así que el crecimiento a 5 y 10 años sale vacío. El
->   consenso es solo de **ventas y BPA, para el año fiscal en curso y el siguiente**: no hay
->   EV/EBITDA futuro. La SEC sigue de respaldo para los estados anuales.
-> - No se alargó el histórico anual con la SEC: sus BPA antiguos no están ajustados por splits
->   (Apple 2016-2017), y mezclarlos falsearía el crecimiento por acción. Posible mejora: usar la SEC
->   solo para las líneas que no son por acción.
+> - **Lo que cambia en la ficha**: Yahoo da **4 años fiscales y 5 trimestres**. El consenso es solo
+>   de **ventas y BPA, para el año fiscal en curso y el siguiente**: no hay EV/EBITDA futuro.
+> - **Histórico anual largo, con la SEC** (`src/fundamentals/backfill.py`, pedido por el usuario el
+>   mismo día): los años anteriores a los de Yahoo salen de los 10-K (XBRL), hasta 11 en total, para
+>   que el crecimiento a 5 y 10 años tenga datos. Dos condiciones: los años que tienen las dos
+>   fuentes deben cuadrar (ventas, beneficio neto y BPA, con un 3 % de margen; si no, no se añade
+>   nada y la ficha se queda en 4 años con su nota), y lo que es por acción se pasa a acciones de
+>   hoy (`sec.py` guarda cuándo se presentó cada cifra, `per_share_filed`, y se aplican los splits
+>   posteriores, que da Yahoo). El histórico se corta en el primer año que falte o no traiga ventas,
+>   porque el crecimiento cuenta filas hacia atrás. La fuente lo dice en la ficha ("Yahoo Finance;
+>   SEC EDGAR (XBRL) before fiscal 2022") y la página Method lo explica.
+>   Comprobado con datos reales: Apple, NVIDIA, Alphabet, Tesla, Microsoft, Walmart y Coca-Cola se
+>   alargan y sus BPA antiguos cuadran con los splits; JPMorgan y Berkshire no (las dos fuentes no
+>   cuentan igual los ingresos de un banco o una aseguradora) y se quedan en 4 años. Los años de la
+>   SEC traen menos líneas (sin coste de ventas ni existencias, por ejemplo). **Los trimestres
+>   siguen siendo los 5 de Yahoo**: sacarlos de los 10-Q es el paso siguiente, sin hacer.
 > - **Avisado al usuario, que decidió seguir**: yfinance no es una API oficial, las condiciones de
 >   Yahoo son de uso personal, y Yahoo puede rechazar las IP de un centro de datos. **Sin comprobar
 >   desde Cloud Run**; si allí falla, `MARKET_DATA=fmp` y redesplegar.
 > - Comprobado contra Yahoo desde el equipo Windows: Apple (9,7 s en frío, con la carga de pandas),
 >   NVIDIA y JPMorgan (2 s cada una); trimestres colocados en su año fiscal (NVIDIA cierra en enero).
->   53 tests en verde (`tests/test_yahoo.py`, sin red). La página Method nombra la fuente nueva.
+>   60 tests en verde (`tests/test_yahoo.py` y `tests/test_backfill.py`, sin red). La página Method nombra la fuente nueva.
 
 > 2026-10-07: **visitas con Cloudflare Web Analytics** (sin cookies). `site/src/layouts/Layout.astro`
 > carga su script solo en `themarkethub.app` y sus subdominios, con el token del sitio de Market Hub

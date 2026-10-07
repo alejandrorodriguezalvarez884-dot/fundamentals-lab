@@ -13,7 +13,7 @@ import logging
 import os
 import threading
 import time
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
 from .fmp import FmpClient, SourceUnavailable
@@ -103,7 +103,9 @@ def _cell(frame, row: str, column: str) -> float | None:
 
 def _day(epoch: Any) -> date | None:
     seconds = _num(epoch)
-    return datetime.fromtimestamp(seconds, timezone.utc).date() if seconds else None
+    # Counted from 1970 by hand: a date before it (a share first traded in 1919) is a negative
+    # number of seconds, which not every system turns into a date.
+    return (datetime(1970, 1, 1, tzinfo=timezone.utc) + timedelta(seconds=seconds)).date() if seconds else None
 
 
 def _a_year_on(day: date, years: int) -> date:
@@ -215,6 +217,13 @@ class YahooClient:
                 row["free_cash_flow"] = row["operating_cash_flow"] - row["capex"]
             rows.append(row)
         return rows
+
+    def splits(self, ticker: str) -> list[tuple[str, float]]:
+        """Every split of the share: its day and how many new shares one old share became."""
+        series = self._ask(f"splits {ticker}", lambda: self.yf.Ticker(ticker).splits)
+        if series is None or getattr(series, "empty", True):
+            return []
+        return [(stamp.strftime("%Y-%m-%d"), float(ratio)) for stamp, ratio in series.items()]
 
     # --- Prices ----------------------------------------------------------------------------
 

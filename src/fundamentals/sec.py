@@ -152,6 +152,8 @@ _TAGS: dict[str, tuple[str, ...]] = {
     "buybacks": ("PaymentsForRepurchaseOfCommonStock",),
     "sbc": ("ShareBasedCompensation",),
 }
+# Lines counted in shares, or per share: a later split changes what they mean.
+PER_SHARE = ("eps_diluted", "shares_diluted")
 _INSTANT = {"cash", "short_term_investments", "total_current_assets", "total_assets",
             "total_current_liabilities", "total_liabilities", "total_equity", "long_term_debt", "short_term_debt"}
 
@@ -161,9 +163,13 @@ def annual_from_facts(facts: dict, years: int = 10) -> list[dict]:
 
     Only values from 10-K filings are used. A flow (revenue, cash flow...) must span about a
     year; a balance (cash, debt...) is taken at the fiscal year end. When a later 10-K restates
-    a year, the later filing wins."""
+    a year, the later filing wins.
+
+    A figure per share is the one of the last 10-K that carried that year, in the shares of that
+    day: each row says when it was filed (``per_share_filed``), so a later split can be applied."""
     gaap = facts.get("facts", {}).get("us-gaap", {})
     by_end: dict[str, dict] = {}
+    filed_on: dict[str, dict[str, str]] = {}
     for line, tags in _TAGS.items():
         for tag in tags:
             units = gaap.get(tag, {}).get("units", {})
@@ -186,8 +192,12 @@ def annual_from_facts(facts: dict, years: int = 10) -> list[dict]:
                     picked[end] = (filed, float(v["val"]))
             # Companies switch tags over the years (Revenues -> RevenueFromContract...): merge
             # them, keeping the preferred tag where both report the same year.
-            for end, (_, val) in picked.items():
-                by_end.setdefault(end, {}).setdefault(line, val)
+            for end, (filed, val) in picked.items():
+                row = by_end.setdefault(end, {})
+                if line not in row:
+                    row[line] = val
+                    if line in PER_SHARE:
+                        filed_on.setdefault(end, {})[line] = filed
     rows = []
     for end in sorted(by_end):
         row = by_end[end]
@@ -199,7 +209,8 @@ def annual_from_facts(facts: dict, years: int = 10) -> list[dict]:
         row["free_cash_flow"] = ocf - capex if ocf is not None and capex is not None else None
         if row.get("operating_income") is not None and row.get("d_and_a") is not None:
             row["ebitda"] = row["operating_income"] + row["d_and_a"]
-        rows.append({"date": end, "fiscal_year": end[:4], "period": "FY", "currency": "USD", **row})
+        rows.append({"date": end, "fiscal_year": end[:4], "period": "FY", "currency": "USD", **row,
+                     "per_share_filed": filed_on.get(end, {})})
     return rows[-years:]
 
 

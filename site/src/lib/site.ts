@@ -8,6 +8,7 @@ export const AUTHOR_URL = "https://alejandrorodriguez.dev/";
 const site = (v: string | undefined, fallback: string) => (v ?? fallback).replace(/\/$/, "");
 export const HUB_URL = site(import.meta.env.PUBLIC_HUB_URL, "https://themarkethub.app");
 export const RADAR_URL = site(import.meta.env.PUBLIC_RADAR_URL, "https://radar.themarkethub.app");
+export const PLAYGROUND_URL = site(import.meta.env.PUBLIC_PLAYGROUND_URL, "https://playground.themarkethub.app");
 export const hubQuoteUrl = (ticker: string) => `${HUB_URL}/quote/?t=${encodeURIComponent(ticker)}`;
 export const radarUrl = (ticker: string) => `${RADAR_URL}/analyze/?ticker=${encodeURIComponent(ticker)}`;
 

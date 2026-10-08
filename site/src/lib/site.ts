@@ -22,6 +22,7 @@ export const API = (import.meta.env.PUBLIC_API_URL ?? "").replace(/\/$/, "");
 
 export const stockUrl = (ticker: string) => `${link("/stock/")}?t=${encodeURIComponent(ticker)}`;
 export const compareUrl = (tickers: string[]) => `${link("/compare/")}?t=${tickers.map(encodeURIComponent).join(",")}`;
+export const peersUrl = (ticker?: string) => (ticker ? `${link("/peers/")}?t=${encodeURIComponent(ticker)}` : link("/peers/"));
 
 // Company names as the SEC writes them ("APPLE INC") read better in title case.
 export function tidyName(name: string): string {

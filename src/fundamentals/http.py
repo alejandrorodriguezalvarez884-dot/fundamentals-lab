@@ -1,4 +1,4 @@
-"""GET JSON from the public data sources, with retries and a per-host rate limit."""
+"""GET JSON (or a filing's text) from the public data sources, with retries and a per-host rate limit."""
 
 from __future__ import annotations
 
@@ -34,7 +34,17 @@ class UpstreamError(Exception):
         self.source, self.status, self.detail = source, status, detail
 
 
-def get_json(
+def get_json(url: str, **kwargs: Any) -> Any:
+    """GET ``url`` and decode its JSON body. Retries transport errors, 429 and 5xx."""
+    return _get(url, **kwargs).json()
+
+
+def get_text(url: str, **kwargs: Any) -> str:
+    """GET ``url`` and return its body as text (a filing's HTML). Same retries as ``get_json``."""
+    return _get(url, **kwargs).text
+
+
+def _get(
     url: str,
     *,
     source: str,
@@ -43,10 +53,10 @@ def get_json(
     limiter: RateLimiter | None = None,
     client: httpx.Client | None = None,
     retries: int = 4,
-) -> Any:
-    """GET ``url`` and decode its JSON body. Retries transport errors, 429 and 5xx."""
+    timeout: float = 30,
+) -> httpx.Response:
     own = client is None
-    client = client or httpx.Client(timeout=30, follow_redirects=True)
+    client = client or httpx.Client(timeout=timeout, follow_redirects=True)
     try:
         for attempt in range(retries):
             if limiter:
@@ -63,7 +73,7 @@ def get_json(
                 continue
             if resp.status_code >= 400:
                 raise UpstreamError(source, resp.status_code, resp.text[:200])
-            return resp.json()
+            return resp
         raise UpstreamError(source, 0, "no answer after retries")
     finally:
         if own:

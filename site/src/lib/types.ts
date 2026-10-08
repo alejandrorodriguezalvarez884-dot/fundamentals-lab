@@ -210,6 +210,13 @@ export type Reading = {
   spent_usd: number;
 };
 
+// The peer map (see src/fundamentals/peers.py). A company's peers are [index in companies, similarity].
+export type PeerBrief = { ticker: string; name: string; industry: string };
+export type PeerSource = { form: string; filed: string; url: string };
+export type PeerDetail = PeerBrief & PeerSource & { peers: (PeerBrief & { similarity: number })[] };
+export type PeerPoint = PeerBrief & PeerSource & { x: number; y: number; peers: [number, number][] };
+export type PeerOverview = { built: string | null; labels: { text: string; x: number; y: number }[]; companies: PeerPoint[] };
+
 export type Compact = {
   ticker: string;
   name: string;

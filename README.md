@@ -15,6 +15,10 @@ ticker o por nombre y ve:
   señales.
 - **Comparador:** de 2 a 5 empresas lado a lado, precios en base 100 y crecimiento frente a
   valoración.
+- **Peers:** un mapa de las mayores empresas según lo que dicen que hacen. Cada una queda junto a
+  las que describen su negocio de forma más parecida en su informe anual (sección Business del
+  10-K), sea cual sea el sector en que estén clasificadas. Un modelo abierto de embeddings, en
+  local y sin API de pago, calcula el parecido. Parecido no es mejor ni peor.
 - **Lectura con IA:** Claude lee los números ya calculados y explica lo que muestran. Solo
   describe: nada de recomendaciones, predicciones ni precios objetivo.
 
@@ -30,6 +34,7 @@ Es una pieza del portal de herramientas de IA para inversión del autor, junto a
 |---|---|
 | Perfil, estados financieros, precios diarios y consenso de analistas | Yahoo Finance (`yfinance`); FMP con `MARKET_DATA=fmp` |
 | Lista de empresas del buscador; estados anuales de respaldo | SEC EDGAR (`company_tickers.json` y XBRL `companyfacts`) |
+| Texto de la sección Business del último informe anual (10-K o 20-F), para el mapa de peers | SEC EDGAR (`submissions` y el documento del informe) |
 | Lectura de los números | Claude (API de Anthropic) |
 
 Las fórmulas están en la página `/method/` del sitio y en `src/fundamentals/metrics.py`,
@@ -48,6 +53,20 @@ make dev                 # web en :4321 (en otra terminal)
 
 Línea de comandos: `uv run fundamentals search apple`, `uv run fundamentals report AAPL`,
 `uv run fundamentals compare AAPL MSFT`. La lectura con IA gasta y pide `--yes`.
+
+## El mapa de peers
+
+Se construye a mano en el equipo del autor y viaja con el código: el servicio solo lee
+`src/fundamentals/peers.json`, no descarga informes ni carga ningún modelo.
+
+```bash
+make peers               # instala el grupo `peers` (fastembed, scikit-learn) y lanza los tres pasos
+```
+
+Los pasos (`uv run fundamentals peers fetch | embed | build`) se pueden lanzar sueltos y retoman
+donde se quedaron; el trabajo intermedio queda en `data/peers/`, fuera de git. Después,
+`uv run fundamentals peers show NVDA` enseña los vecinos de una empresa, y el mapa nuevo sale a
+producción con el siguiente `make deploy`. No gasta en ninguna API.
 
 ## Despliegue
 

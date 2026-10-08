@@ -1,0 +1,124 @@
+---
+// The peer map: companies placed by how alike their own descriptions of their business are.
+import Page from "../components/Page.astro";
+import Search from "../components/Search.astro";
+---
+
+<Page title="Peers" description="A map of US-listed companies by what they say they do: each one next to the companies whose business description, in their annual reports, reads most like its own.">
+	<h1 class="text-[2rem] font-medium leading-tight tracking-tight text-ink-strong">Peers</h1>
+	<p class="mt-2 max-w-2xl text-ink">
+		Each dot is a company. Two dots are close when the companies describe their business in similar words in their annual
+		reports, whatever industry they are filed under.
+	</p>
+	<div class="mt-5 w-full max-w-md"><Search mode="pick" button="Find" id="peer-pick" /></div>
+	<p id="peer-note" class="mt-2 text-sm text-muted" hidden></p>
+	<div id="peers" class="mt-8"></div>
+	<noscript><p class="mt-6 text-sm text-muted">This page needs JavaScript.</p></noscript>
+</Page>
+
+<script>
+	import { add, h } from "../lib/dom";
+	import { shortDate } from "../lib/format";
+	import { peerMap } from "../lib/peermap";
+	import { API, compareUrl, peersUrl, stockUrl, tidyName } from "../lib/site";
+	import type { PeerDetail, PeerOverview } from "../lib/types";
+
+	const root = document.getElementById("peers")!;
+	const note = document.getElementById("peer-note")!;
+	const form = document.getElementById("peer-pick")!;
+	const say = (text: string) => ((note.textContent = text), (note.hidden = !text));
+
+	function start(data: PeerOverview) {
+		const pts = data.companies;
+		const index = new Map(pts.map((p, i) => [p.ticker, i]));
+		const panel = h("aside", "min-w-0");
+		const map = peerMap(data, (i) => choose(i));
+		root.replaceChildren(add(h("div", "grid min-w-0 gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1fr)_21rem]"), map.el, panel));
+
+		function describe(i: number | null) {
+			if (i === null) {
+				panel.replaceChildren(
+					h("p", "text-muted", "Choose a company on the map, or find it by name."),
+					h("p", "mt-3 text-[12.5px] text-muted", `${pts.length.toLocaleString("en-US")} companies. Drag to move; the buttons, a pinch or a double click zoom.`),
+				);
+				return;
+			}
+			const c = pts[i];
+			const nearest = c.peers.map(([j, s]) => ({ j, s, p: pts[j] }));
+			const compare = add(h("a", "btn btn-primary"), `Compare with the nearest ${Math.min(4, nearest.length)}`);
+			compare.href = compareUrl([c.ticker, ...nearest.slice(0, 4).map((n) => n.p.ticker)]);
+			const open = add(h("a", "btn btn-ghost"), "Fundamentals");
+			open.href = stockUrl(c.ticker);
+
+			const list = h("ol", "divide-y divide-line");
+			for (const n of nearest) {
+				const row = h("button", "group flex w-full items-baseline gap-3 py-2.5 text-left");
+				row.type = "button";
+				row.addEventListener("click", () => choose(n.j));
+				add(row,
+					h("span", "num w-14 flex-none text-[13px] text-ink-strong group-hover:underline", n.p.ticker),
+					add(h("span", "min-w-0 flex-1"), h("span", "block truncate text-sm text-ink", tidyName(n.p.name)), h("span", "block truncate text-[12.5px] text-muted", n.p.industry)),
+					h("span", "num flex-none text-[13px] text-muted", n.s.toFixed(2)));
+				list.append(add(h("li"), row));
+			}
+			const source = add(h("a", "link"), `${c.form} filed ${shortDate(c.filed)}`);
+			source.href = c.url;
+			source.target = "_blank";
+			source.rel = "noopener";
+			panel.replaceChildren(
+				h("p", "text-[13px] text-muted", [c.ticker, c.industry].filter(Boolean).join(" · ")),
+				h("h2", "mt-1 text-xl font-medium leading-snug text-ink-strong", tidyName(c.name)),
+				add(h("div", "mt-4 flex flex-wrap gap-2"), compare, open),
+				add(h("section", "sec mt-8"),
+					add(h("div", "sec-head"), h("h3", "sec-title", "Most similar business descriptions"), h("span", "sec-note", "Similarity")),
+					list),
+				add(h("p", "mt-4 text-[12.5px] text-muted"), "Source: ", source, ", SEC EDGAR"),
+			);
+		}
+
+		function choose(i: number | null) {
+			say("");
+			map.select(i);
+			describe(i);
+			history.replaceState(null, "", i === null ? peersUrl() : peersUrl(pts[i].ticker));
+			document.title = i === null ? "Peers — Fundamentals Lab — Market Hub" : `${pts[i].ticker} peers — Fundamentals Lab — Market Hub`;
+		}
+
+		// A ticker may be a second share class (GOOG for GOOGL): the API knows which company it is.
+		async function find(ticker: string) {
+			const wanted = ticker.trim().toUpperCase();
+			if (!wanted) return choose(null);
+			let i = index.get(wanted);
+			if (i === undefined) {
+				try {
+					const res = await fetch(`${API}/api/peers/${encodeURIComponent(wanted)}`);
+					if (res.ok) i = index.get(((await res.json()) as PeerDetail).ticker);
+				} catch {
+					// Not found is said below, whatever the reason.
+				}
+			}
+			if (i === undefined) {
+				choose(null);
+				return say(`${wanted} is not on the map. It has the largest US-listed companies whose latest annual report carries a Business section.`);
+			}
+			choose(i);
+		}
+
+		form.addEventListener("pick", (e) => find((e as CustomEvent<{ ticker: string }>).detail.ticker));
+		find(new URLSearchParams(location.search).get("t") ?? "");
+	}
+
+	async function load() {
+		root.replaceChildren(h("div", "skeleton h-[420px] sm:h-[560px] lg:h-[640px]"));
+		try {
+			const res = await fetch(`${API}/api/peers`);
+			if (!res.ok) throw new Error(String(res.status));
+			const data = (await res.json()) as PeerOverview;
+			if (!data.companies.length) return root.replaceChildren(h("p", "text-muted", "The peer map has not been built yet."));
+			start(data);
+		} catch {
+			root.replaceChildren(h("p", "border-l-2 border-down pl-4 text-down", "The peer map could not be loaded. Try again in a moment."));
+		}
+	}
+	load();
+</script>

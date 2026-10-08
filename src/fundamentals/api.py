@@ -7,6 +7,8 @@
     GET /api/stock/{ticker}/reading     the AI reading of the report (may call the model)
     GET /api/compare?tickers=A,B,C      side-by-side comparison of 2 to 5 companies
     GET /api/compare/reading?tickers=   the AI reading of the comparison (may call the model)
+    GET /api/peers                      the peer map: every company, its place and its neighbours
+    GET /api/peers/{ticker}             the companies whose business description is most like this one's
     GET /api/me                         who is signed in to Market Hub, and the hub's address
 
 Everything else is the static site, when FUNDAMENTALS_STATIC_DIR points at its build.
@@ -38,6 +40,7 @@ from .fmp import SourceUnavailable
 from .hubauth import HubGate
 from .hubauth import settings as hub_settings
 from .http import UpstreamError
+from .peers import PeerMap
 from .reading import Reader, ReadingRefused, ReadingUnavailable
 from .report import NoData, Reporter, compact
 from .sec import Directory, UnknownCompany
@@ -111,7 +114,8 @@ def _tickers(raw: str) -> list[str]:
 
 def create_app(store: Store | None = None, directory: Directory | None = None,
                reporter: Reporter | None = None, reader: Reader | None = None,
-               static_dir: str | None = None, hub: tuple[str, str] | None | bool = True) -> FastAPI:
+               static_dir: str | None = None, hub: tuple[str, str] | None | bool = True,
+               peers: PeerMap | None = None) -> FastAPI:
     """App factory. Tests pass their own pieces, so they need no network.
 
     ``hub`` is (hub URL, hub session secret) to admit only people signed in to Market Hub; by
@@ -134,6 +138,9 @@ def create_app(store: Store | None = None, directory: Directory | None = None,
     directory = directory or Directory()
     reporter = reporter or Reporter(store)
     reader = reader or Reader(store, Budget(store))
+    peer_map = peers or PeerMap.load()
+    # The map only changes with a deploy: it is written out once and the browser may keep it.
+    peer_overview = json.dumps(peer_map.overview(), separators=(",", ":")).encode()
     data_limiter = RateLimiter(PER_IP_PER_HOUR * 4)  # reports cost provider quota, not money
     reading_limiter = RateLimiter(PER_IP_PER_HOUR)
 
@@ -239,6 +246,18 @@ def create_app(store: Store | None = None, directory: Directory | None = None,
             return reader.comparison(compare(reports_for(wanted))["companies"])
         except Exception as exc:
             raise _failure(exc, ",".join(wanted)) from None
+
+    @app.get("/api/peers")
+    def peers_view() -> Response:
+        return Response(peer_overview, media_type="application/json",
+                        headers={"Cache-Control": "private, max-age=3600"})
+
+    @app.get("/api/peers/{ticker}")
+    def peers_of(ticker: str) -> dict:
+        found = peer_map.get(ticker)
+        if not found:
+            raise HTTPException(404, "This company is not on the peer map.")
+        return found
 
     @app.get("/api/budget")
     def budget() -> dict:

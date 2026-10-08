@@ -8,7 +8,7 @@
 
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
-.PHONY: help install test check site api dev serve deploy budget
+.PHONY: help install test check site api dev serve deploy budget peers
 
 help: ## List the targets
 	@grep -E '^[a-z]+:.*## ' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  make %-9s %s\n", $$1, $$2}'
@@ -37,6 +37,12 @@ serve: site ## Run site and API together at http://localhost:8080, as in product
 
 budget: ## What the AI readings have spent (local store; on Cloud Run see /api/budget)
 	uv run fundamentals budget
+
+peers: ## Rebuild the peer map on this machine (SEC filings + a local model, no paid API; about an hour, picks up where it stopped)
+	uv sync --group peers
+	uv run fundamentals peers fetch
+	uv run fundamentals peers embed
+	uv run fundamentals peers build
 
 deploy: ## Build and deploy the service to Cloud Run (see scripts/deploy-cloudrun.sh)
 	./scripts/deploy-cloudrun.sh

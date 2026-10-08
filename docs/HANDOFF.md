@@ -28,7 +28,9 @@ Decisiones del usuario ese día:
 > 2026-10-08: **Peer Map, una sección nueva (`/peers/`): empresas parecidas por lo que dicen que
 > hacen.** Pedido por el usuario ese día, que eligió: dentro de Fundamentals Lab (no un servicio
 > nuevo), las ~1.500 mayores, y embeddings con un modelo abierto en local (sin API de pago).
-> **En `main`, sin desplegar.**
+> **Desplegado el 2026-10-08 como `fundamentals-lab-00014-kbr`** (variables, topes y secretos como
+> estaban, comprobado antes y después). En producción responde, pide sesión en `/peers/` y en
+> `/api/peers`, y `peers.json` fue en la subida; **falta verlo con una sesión real del hub**.
 > - **Qué ve el usuario**: la página `Peers` (barra de la herramienta: `Company · Compare · Peers ·
 >   Method`) con un mapa en canvas, un punto por empresa, que se mueve y se amplía; al elegir una
 >   (en el mapa, en el buscador o con `?t=NVDA`) se encuadra con sus 10 vecinas y al lado sale la

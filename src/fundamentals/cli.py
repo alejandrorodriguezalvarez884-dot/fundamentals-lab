@@ -5,10 +5,6 @@
     fundamentals compare AAPL MSFT      the comparison table (no model)
     fundamentals reading AAPL --yes     the AI reading: calls the model, spends up to the request cap
     fundamentals budget                 what the readings have spent
-    fundamentals peers fetch            the peer map, step 1: each company's Business section, from the SEC
-    fundamentals peers embed            step 2: one vector per company, with a model on this machine
-    fundamentals peers build            step 3: neighbours and map, into src/fundamentals/peers.json
-    fundamentals peers show NVDA        a company's neighbours on the map as built
 """
 
 from __future__ import annotations
@@ -19,7 +15,7 @@ import sys
 
 from .budget import Budget
 from .compare import compare
-from .config import PEERS_UNIVERSE, READING_MODEL, READING_REQUEST_MAX_USD
+from .config import READING_MODEL, READING_REQUEST_MAX_USD
 from .reading import Reader
 from .report import Reporter, compact
 from .sec import Directory
@@ -32,30 +28,6 @@ def _fmt(value) -> str:
     if isinstance(value, float):
         return f"{value:,.4g}" if abs(value) < 1000 else f"{value:,.0f}"
     return str(value)
-
-
-def _peers(args) -> int:
-    # Imported here: the batch is the only part that needs it.
-    from . import peerbuild
-    from .peers import PeerMap
-
-    if args.step == "fetch":
-        print(json.dumps(peerbuild.fetch(args.size, retry=args.retry), indent=2))
-    elif args.step == "embed":
-        peerbuild.embed()
-    elif args.step == "build":
-        peerbuild.build()
-    elif args.step == "status":
-        print(json.dumps(peerbuild.summary(), indent=2))
-    else:
-        found = PeerMap.load().get(args.ticker or "")
-        if not found:
-            print("Not on the map.", file=sys.stderr)
-            return 1
-        print(f"{found['ticker']} — {found['name']} ({found['industry']})  {found['form']} filed {found['filed']}")
-        for peer in found["peers"]:
-            print(f"  {peer['similarity']:.3f}  {peer['ticker']:7} {peer['name']}  ({peer['industry']})")
-    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -72,15 +44,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("ticker")
     p.add_argument("--yes", action="store_true", help="confirm the call to the model")
     sub.add_parser("budget")
-    p = sub.add_parser("peers", help="build the peer map on this machine (no paid API)")
-    p.add_argument("step", choices=("fetch", "embed", "build", "status", "show"))
-    p.add_argument("ticker", nargs="?", help="for show: the company whose neighbours to print")
-    p.add_argument("--size", type=int, default=PEERS_UNIVERSE, help="how many companies to read")
-    p.add_argument("--retry", action="store_true", help="fetch: read again the companies that were skipped")
     args = parser.parse_args(argv)
-
-    if args.command == "peers":
-        return _peers(args)
 
     store = default_store()
     directory = Directory()

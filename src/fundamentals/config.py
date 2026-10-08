@@ -35,22 +35,6 @@ REPORT_TTL_HOURS = 12
 COMPARE_MIN = 2
 COMPARE_MAX = 5
 
-# --- Peer map ------------------------------------------------------------------------------
-
-SEC_SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik:010d}.json"
-SEC_SUBMISSIONS_PAGE_URL = "https://data.sec.gov/submissions/{name}"
-SEC_ARCHIVE_URL = "https://www.sec.gov/Archives/edgar/data/{cik}/{accession}/{document}"
-# The map is built by hand on the owner's machine (`make peers`) and shipped with the code: the
-# service only reads this file.
-PEERS_FILE = Path(os.environ.get("PEERS_FILE", Path(__file__).resolve().parent / "peers.json"))
-# How many companies are read, from the top of the SEC list (ordered roughly by size). About
-# seven in eight have a Business section to read, so some 1,500 end up on the map.
-PEERS_UNIVERSE = 1725
-# Neighbours kept for each company.
-PEERS_K = 10
-# An open embedding model that runs on a CPU, through fastembed (ONNX). No key, no paid API.
-PEERS_MODEL = os.environ.get("PEERS_MODEL", "BAAI/bge-small-en-v1.5")
-
 # --- AI reading (Claude) -------------------------------------------------------------------
 
 # The model that writes the reading of the numbers. It never computes them: every figure in the

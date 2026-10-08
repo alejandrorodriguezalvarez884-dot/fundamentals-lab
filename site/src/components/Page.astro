@@ -19,7 +19,6 @@ const under = (...roots: string[]) => roots.some((r) => path.startsWith(link(r))
 const pages = [
 	{ href: link("/"), label: "Company", active: path === link("/") || under("/stock/") },
 	{ href: link("/compare/"), label: "Compare", active: under("/compare/") },
-	{ href: link("/peers/"), label: "Peers", active: under("/peers/") },
 	{ href: link("/method/"), label: "Method", active: under("/method/") },
 ];
 ---

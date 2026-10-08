@@ -22,13 +22,6 @@ fundamentals = "fundamentals.cli:main"
 dev = [
     "pytest>=9.1.1",
 ]
-# Only for building the peer map on the owner's machine (`make peers`). The service does not
-# install it: it reads the map the build leaves in src/fundamentals/peers.json.
-peers = [
-    "fastembed>=0.4",
-    "numpy>=2",
-    "scikit-learn>=1.5",
-]
 
 [build-system]
 requires = ["uv_build>=0.8.17,<0.9.0"]

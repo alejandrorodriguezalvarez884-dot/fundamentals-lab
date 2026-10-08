@@ -8,6 +8,7 @@ export const AUTHOR_URL = "https://alejandrorodriguez.dev/";
 const site = (v: string | undefined, fallback: string) => (v ?? fallback).replace(/\/$/, "");
 export const HUB_URL = site(import.meta.env.PUBLIC_HUB_URL, "https://themarkethub.app");
 export const RADAR_URL = site(import.meta.env.PUBLIC_RADAR_URL, "https://radar.themarkethub.app");
+export const PEERS_URL = site(import.meta.env.PUBLIC_PEERS_URL, "https://peers.themarkethub.app");
 export const PLAYGROUND_URL = site(import.meta.env.PUBLIC_PLAYGROUND_URL, "https://playground.themarkethub.app");
 export const hubQuoteUrl = (ticker: string) => `${HUB_URL}/quote/?t=${encodeURIComponent(ticker)}`;
 export const radarUrl = (ticker: string) => `${RADAR_URL}/analyze/?ticker=${encodeURIComponent(ticker)}`;
@@ -23,7 +24,6 @@ export const API = (import.meta.env.PUBLIC_API_URL ?? "").replace(/\/$/, "");
 
 export const stockUrl = (ticker: string) => `${link("/stock/")}?t=${encodeURIComponent(ticker)}`;
 export const compareUrl = (tickers: string[]) => `${link("/compare/")}?t=${tickers.map(encodeURIComponent).join(",")}`;
-export const peersUrl = (ticker?: string) => (ticker ? `${link("/peers/")}?t=${encodeURIComponent(ticker)}` : link("/peers/"));
 
 // Company names as the SEC writes them ("APPLE INC") read better in title case.
 export function tidyName(name: string): string {

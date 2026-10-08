@@ -11,7 +11,6 @@ import Search from "../components/Search.astro";
 		<div class="w-full max-w-md"><Search mode="pick" button="Add" id="pick" /></div>
 		<div id="chips" class="flex flex-wrap gap-2 lg:pt-2"></div>
 	</div>
-	<div id="suggest" class="mt-3 flex flex-wrap items-center gap-2 empty:hidden"></div>
 	<div id="compare" class="mt-12"></div>
 </Page>
 
@@ -22,11 +21,10 @@ import Search from "../components/Search.astro";
 	import { compareChart } from "../lib/pricechart";
 	import { API, compareUrl, stockUrl, tidyName } from "../lib/site";
 	import { renderReading } from "../lib/stockview";
-	import type { Comparison, PeerDetail, Reading } from "../lib/types";
+	import type { Comparison, Reading } from "../lib/types";
 
 	const MAX = 5;
 	const root = document.getElementById("compare")!;
-	const suggest = document.getElementById("suggest")!;
 	const chips = document.getElementById("chips")!;
 	const form = document.getElementById("pick")!;
 	let tickers = (new URLSearchParams(location.search).get("t") ?? "").split(",").map((t) => t.trim().toUpperCase()).filter(Boolean).slice(0, MAX);
@@ -48,31 +46,6 @@ import Search from "../components/Search.astro";
 			x.addEventListener("click", () => setTickers(tickers.filter((u) => u !== t)));
 			return add(chip, dot, t, x);
 		}));
-		drawSuggestions();
-	}
-
-	// One press adds a company whose business description reads like the first one's (the peer map).
-	let asked = 0;
-	async function drawSuggestions() {
-		const mine = ++asked;
-		suggest.replaceChildren();
-		if (!tickers.length || tickers.length >= MAX) return;
-		try {
-			const res = await fetch(`${API}/api/peers/${encodeURIComponent(tickers[0])}`);
-			if (!res.ok) return;
-			const found = (await res.json()) as PeerDetail;
-			const more = found.peers.filter((p) => !tickers.includes(p.ticker)).slice(0, 6);
-			if (mine !== asked || !more.length) return;
-			suggest.append(h("span", "text-[13px] text-muted", `Similar businesses to ${found.ticker}`), ...more.map((p) => {
-				const b = h("button", "chip py-0.5 hover:border-muted hover:text-ink-strong", `+ ${p.ticker}`);
-				b.type = "button";
-				b.title = tidyName(p.name);
-				b.addEventListener("click", () => setTickers([...tickers, p.ticker]));
-				return b;
-			}));
-		} catch {
-			// Without the map the comparison works as before.
-		}
 	}
 
 	function setTickers(next: string[]) {

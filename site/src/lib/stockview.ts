@@ -3,8 +3,8 @@ import { barChart, lineChart } from "./charts";
 import { add, card, companyTabs, h, stat, toneOf } from "./dom";
 import { fmt, mult, money, pct, price, shortDate, signedPct, type Kind } from "./format";
 import { technicalChart } from "./pricechart";
-import { API, compareUrl, hubQuoteUrl, peersUrl, radarUrl, stockUrl, tidyName } from "./site";
-import type { MultipleKey, PeerDetail, Period, Ratios, Reading, Report } from "./types";
+import { API, compareUrl, hubQuoteUrl, radarUrl, stockUrl, tidyName } from "./site";
+import type { MultipleKey, Period, Ratios, Reading, Report } from "./types";
 
 const yearLabel = (p: { fiscal_year: string; period: string; date: string }) =>
   p.period === "FY" || p.period === "TTM" ? `FY${p.fiscal_year?.slice(-2) ?? p.date.slice(2, 4)}` : `${p.period} ${p.date.slice(2, 7)}`;
@@ -79,36 +79,7 @@ export function overview(r: Report): HTMLElement {
     if (facts.length) about.body.append(h("p", "mt-3 text-xs text-muted", facts.join(" · ")));
     el.append(about.el);
   }
-  el.append(similar(r.ticker));
   return el;
-}
-
-// The companies whose business description reads most like this one's, from the peer map. Empty
-// (and out of the page) for a company that is not on the map.
-function similar(ticker: string): HTMLElement {
-  const c = card("Similar businesses", "Companies whose annual report describes a business most like this one's. Nearest first.");
-  c.el.hidden = true;
-  fetch(`${API}/api/peers/${encodeURIComponent(ticker)}`)
-    .then((res) => (res.ok ? (res.json() as Promise<PeerDetail>) : null))
-    .then((found) => {
-      if (!found?.peers.length) return;
-      const list = h("ul", "grid gap-x-10 sm:grid-cols-2");
-      for (const p of found.peers.slice(0, 8)) {
-        const a = add(h("a", "group flex items-baseline gap-3 border-b border-line py-2.5"),
-          h("span", "num w-14 flex-none text-[13px] text-ink-strong group-hover:underline", p.ticker),
-          add(h("span", "min-w-0 flex-1"), h("span", "block truncate text-sm text-ink", tidyName(p.name)), h("span", "block truncate text-[12.5px] text-muted", p.industry)));
-        a.href = stockUrl(p.ticker);
-        list.append(add(h("li", "min-w-0"), a));
-      }
-      const compare = add(h("a", "btn btn-ghost"), `Compare with the nearest ${Math.min(4, found.peers.length)}`);
-      compare.href = compareUrl([found.ticker, ...found.peers.slice(0, 4).map((p) => p.ticker)]);
-      const map = add(h("a", "btn btn-ghost"), "See on the map");
-      map.href = peersUrl(found.ticker);
-      c.body.append(list, add(h("div", "mt-5 flex flex-wrap gap-2"), compare, map));
-      c.el.hidden = false;
-    })
-    .catch(() => undefined);
-  return c.el;
 }
 
 export function renderReading(body: HTMLElement, reading: Reading) {

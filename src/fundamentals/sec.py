@@ -16,7 +16,7 @@ from datetime import date
 import httpx
 
 from .config import SEC_COMPANYFACTS_URL, SEC_RPS, SEC_TICKERS_URL
-from .http import RateLimiter, get_json, get_text
+from .http import RateLimiter, get_json
 
 _limiter = RateLimiter(SEC_RPS)
 
@@ -28,11 +28,6 @@ def _headers() -> dict[str, str]:
 
 def sec_get(url: str, client: httpx.Client | None = None):
     return get_json(url, source="SEC", headers=_headers(), limiter=_limiter, client=client)
-
-
-def sec_get_text(url: str, client: httpx.Client | None = None) -> str:
-    """A filing's document. They run to tens of megabytes, so the timeout is longer."""
-    return get_text(url, source="SEC", headers=_headers(), limiter=_limiter, client=client, timeout=120)
 
 
 @dataclass(frozen=True)

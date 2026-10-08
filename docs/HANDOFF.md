@@ -1,6 +1,6 @@
 # Estado del proyecto y cómo continuar
 
-Última actualización: 2026-10-08. Este documento basta para retomar el trabajo en otra sesión,
+Última actualización: 2026-10-05. Este documento basta para retomar el trabajo en otra sesión,
 sin el historial de la conversación.
 
 ## Qué se pidió
@@ -25,52 +25,15 @@ Decisiones del usuario ese día:
 
 ## Dónde estamos
 
-> 2026-10-08: **Peer Map, una sección nueva (`/peers/`): empresas parecidas por lo que dicen que
-> hacen.** Pedido por el usuario ese día, que eligió: dentro de Fundamentals Lab (no un servicio
-> nuevo), las ~1.500 mayores, y embeddings con un modelo abierto en local (sin API de pago).
-> **Desplegado el 2026-10-08 como `fundamentals-lab-00014-kbr`** (variables, topes y secretos como
-> estaban, comprobado antes y después). En producción responde, pide sesión en `/peers/` y en
-> `/api/peers`, y `peers.json` fue en la subida; **falta verlo con una sesión real del hub**.
-> - **Qué ve el usuario**: la página `Peers` (barra de la herramienta: `Company · Compare · Peers ·
->   Method`) con un mapa en canvas, un punto por empresa, que se mueve y se amplía; al elegir una
->   (en el mapa, en el buscador o con `?t=NVDA`) se encuadra con sus 10 vecinas y al lado sale la
->   lista con su parecido, el botón que lleva las 4 más cercanas al comparador y el enlace al
->   informe de la SEC del que sale. En la ficha, pestaña Overview, un bloque "Similar businesses".
->   En el comparador, botones "+ AMD" con las parecidas a la primera empresa. La página Method lo
->   explica (ahí sí: es la página de método de esta herramienta).
-> - **Cómo se construye** (`src/fundamentals/peerbuild.py`, a mano con `make peers`, tres pasos que
->   retoman donde se quedaron): `fetch` lee de EDGAR el último 10-K (o 20-F) de las primeras 1.725
->   empresas de la lista de la SEC y se queda con la sección Business (Item 1; Item 4 en el 20-F);
->   `embed` la parte en trozos de 1.600 caracteres y los pasa por `BAAI/bge-small-en-v1.5` con
->   fastembed (ONNX, CPU), un vector por empresa (la media de sus trozos); `build` resta la media
->   de todas las empresas (lo que dice cualquier informe anual), calcula el coseno, guarda los 10
->   vecinos, coloca el mapa con t-SNE y pone nombres a las zonas (el sector SIC que más se repite
->   en cada grupo de k-means). El resultado es `src/fundamentals/peers.json`, que **va en git y en
->   la imagen**: el servicio solo lo lee (`peers.py`, `/api/peers` y `/api/peers/{ticker}`), no
->   descarga informes ni carga el modelo. `fastembed` y `scikit-learn` están en el grupo `peers` de
->   `pyproject.toml`, que el contenedor no instala. El trabajo intermedio queda en `data/peers/`
->   (fuera de git).
-> - **Lo que tarda, medido el 2026-10-08** en el portátil del usuario (Core Ultra 7 265H, sin GPU
->   que valga): `fetch` 8 min (2 peticiones por empresa, la SEC no frenó), `embed` 73 min para
->   1.396 empresas (76.800 trozos; entre 9 y 28 por segundo según lo caliente que esté la CPU y lo
->   que corra al lado: no lanzar tests ni builds mientras tanto), `build` 20 s. No gasta en ninguna
->   API. El modelo (70 MB) se baja una vez de Hugging Face a `data/peers/model`.
-> - **Comprobado**: 80 tests en verde (`tests/test_peers.py`, sin red ni modelo), `astro check`
->   limpio y la web en local con el mapa entero (1.506 empresas): elegir en el mapa y por
->   `?t=`, una segunda clase de acción (`GOOG` abre Alphabet), una empresa que no está (`INTC`), el
->   bloque de la ficha de KO, los botones del comparador y 375 px sin desborde. Vecinos que salen:
->   KO con Coca-Cola Consolidated, PepsiCo y Monster; NVDA con Nebius, AMD y Astera; UBER con Lyft
->   y DoorDash; JPMorgan sale junto a bancos regionales, no junto a Morgan Stanley o Bank of
->   America como en la muestra de 35 (sin mirar por qué; Citi no está en el mapa).
-> - **El fichero no puede vivir en una carpeta `data/`**: `.gitignore` y `.gcloudignore` ignoran
->   `data/` a cualquier profundidad, y el mapa llegaría vacío a producción.
-> - **Quién falta en el mapa**: de 1.725 leídas, 1.506 tienen sección. 157 no presentan 10-K ni
->   20-F (ADR que cotizan fuera de bolsa, canadienses con 40-F, y Exxon, que cotiza desde 2026 bajo
->   una sociedad nueva sin informe anual propio todavía). 62 presentan el informe con formato propio
->   y sin una sección Business que se pueda delimitar (Intel, GE, Citi, Honeywell, ASML, Shell,
->   SAP, HSBC...). La web dice "is not on the map" y la ficha no enseña el bloque.
-> - **Sin hacer**: sacar el negocio de los informes con formato propio; los 40-F; rehacer el mapa
->   cuando salgan los 10-K nuevos (a mano, nada programado).
+> 2026-10-08: **Peers ya no vive aquí: es una herramienta propia, Peer Map**
+> (`market-hub-peers-map`, https://peers.themarkethub.app). Ese mismo día, unas horas antes, se había
+> hecho como sección de Fundamentals Lab (página `/peers/`, bloque "Similar businesses" en la
+> ficha, botones en el comparador; commit `4c24569`, desplegado como `fundamentals-lab-00014-kbr`)
+> y después el usuario pidió sacarlo a un despliegue aparte y **quitarlo todo de aquí**. El
+> commit se revirtió entero: Fundamentals Lab queda como estaba, sin página, sin bloque, sin
+> botones, sin `/api/peers` y sin el grupo de dependencias del batch. Lo único nuevo es el enlace
+> `Peers` en `HubNav.astro` (Tools), que lleva a la herramienta nueva. El código, el mapa
+> (`peers.json`) y el trabajo del batch (`data/peers/`) están en el otro repo.
 
 > 2026-10-07: **los datos salen de Yahoo Finance (`yfinance`), no de FMP** (desplegado ese día como
 > `fundamentals-lab-00012-c98`, con el histórico largo de la SEC; topes y configuración como estaban).

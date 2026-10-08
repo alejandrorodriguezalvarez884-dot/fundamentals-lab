@@ -25,6 +25,14 @@ Decisiones del usuario ese día:
 
 ## Dónde estamos
 
+> 2026-10-08: **Playground en la barra de My Hub** (desplegado como `fundamentals-lab-00015-x65`).
+> "Tools" de la barra lateral lleva una herramienta más, **Playground**
+> (https://playground.themarkethub.app, repo `market-hub-playground`): un tablero de gráficos y
+> tablas que se compone pidiéndolo por chat. `PLAYGROUND_URL` y el enlace en `HubNav.astro`.
+> Desplegado desde una copia limpia del commit, con la configuración del servicio idéntica a la de
+> antes. El subdominio estaba esperando su certificado de Google al desplegar: hasta que se emita,
+> el enlace no abre.
+
 > 2026-10-08: **Peers ya no vive aquí: es una herramienta propia, Peer Map**
 > (`market-hub-peers-map`, https://peers.themarkethub.app). Ese mismo día, unas horas antes, se había
 > hecho como sección de Fundamentals Lab (página `/peers/`, bloque "Similar businesses" en la

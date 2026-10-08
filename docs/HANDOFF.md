@@ -42,10 +42,8 @@ Decisiones del usuario ese día:
 > botones, sin `/api/peers` y sin el grupo de dependencias del batch. Lo único nuevo es el enlace
 > `Peers` en `HubNav.astro` (Tools), que lleva a la herramienta nueva. El código, el mapa
 > (`peers.json`) y el trabajo del batch (`data/peers/`) están en el otro repo.
-> **Sin desplegar todavía**: producción sigue en `fundamentals-lab-00014-kbr`, con la página Peers
-> dentro, hasta que `peers.themarkethub.app` resuelva (falta el CNAME `peers` →
-> `ghs.googlehosted.com` en Cloudflare, que pone el usuario). Así no hay un rato sin Peers ni un
-> enlace roto en la navegación.
+> **Desplegado el 2026-10-08 como `fundamentals-lab-00016-kjp`** (variables, topes y secretos como
+> estaban, comparados antes y después), cuando `peers.themarkethub.app` ya respondía.
 
 > 2026-10-07: **los datos salen de Yahoo Finance (`yfinance`), no de FMP** (desplegado ese día como
 > `fundamentals-lab-00012-c98`, con el histórico largo de la SEC; topes y configuración como estaban).

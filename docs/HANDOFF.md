@@ -25,10 +25,10 @@ Decisiones del usuario ese día:
 
 ## Dónde estamos
 
-> 2026-10-14: **Options en la barra de My Hub** (sin desplegar). "Tools" de la barra lateral lleva
+> 2026-10-14: **Options en la barra de My Hub** (desplegado como `fundamentals-lab-00017-lkl`, con la configuración del servicio idéntica). "Tools" de la barra lateral lleva
 > una herramienta más, **Options** (Options Lab, https://options.themarkethub.app, repo
-> `market-hub-options`): cadenas de opciones leídas con detalle y estrategias. **No desplegar
-> hasta que ese subdominio responda por HTTPS**: hasta entonces el enlace no abre.
+> `market-hub-options`): cadenas de opciones leídas con detalle y estrategias. Desplegado cuando ese
+> subdominio ya respondía por HTTPS.
 
 > 2026-10-08: **Playground en la barra de My Hub** (desplegado como `fundamentals-lab-00015-x65`).
 > "Tools" de la barra lateral lleva una herramienta más, **Playground**

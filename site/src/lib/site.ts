@@ -10,6 +10,7 @@ export const HUB_URL = site(import.meta.env.PUBLIC_HUB_URL, "https://themarkethu
 export const RADAR_URL = site(import.meta.env.PUBLIC_RADAR_URL, "https://radar.themarkethub.app");
 export const PEERS_URL = site(import.meta.env.PUBLIC_PEERS_URL, "https://peers.themarkethub.app");
 export const PLAYGROUND_URL = site(import.meta.env.PUBLIC_PLAYGROUND_URL, "https://playground.themarkethub.app");
+export const OPTIONS_URL = site(import.meta.env.PUBLIC_OPTIONS_URL, "https://options.themarkethub.app");
 export const hubQuoteUrl = (ticker: string) => `${HUB_URL}/quote/?t=${encodeURIComponent(ticker)}`;
 export const radarUrl = (ticker: string) => `${RADAR_URL}/analyze/?ticker=${encodeURIComponent(ticker)}`;
 

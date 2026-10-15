@@ -1,6 +1,5 @@
 // Site-wide constants and links.
 export const SITE_NAME = "Fundamentals Lab";
-export const REPO_URL = "https://github.com/alejandrorodriguezalvarez884-dot/fundamentals-lab";
 export const AUTHOR_URL = "https://alejandrorodriguez.dev/";
 
 // The tool is a section of Market Hub: its header is the portal's, and a company's page links to

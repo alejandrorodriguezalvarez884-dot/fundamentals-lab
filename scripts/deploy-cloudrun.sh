@@ -12,7 +12,7 @@
 # HUB_URL (the Market Hub address) admits only people signed in there: the service reads the
 # hub's session cookie with the hub's secret (Secret Manager: market-hub-session-secret).
 #
-# Optional overrides: GCP_PROJECT, GCP_REGION, SERVICE_NAME, MAX_INSTANCES, READING_DAILY_MAX_USD,
+# Optional overrides: GCP_PROJECT, GCP_REGION, SERVICE_NAME, MIN_INSTANCES, MAX_INSTANCES, READING_DAILY_MAX_USD,
 # READING_TOTAL_MAX_USD, READING_MODEL.
 set -euo pipefail
 
@@ -28,6 +28,8 @@ command -v gcloud >/dev/null || fail "gcloud is not installed."
 GCP_PROJECT="${GCP_PROJECT:-$(gcloud config get-value project 2>/dev/null || true)}"
 GCP_REGION="${GCP_REGION:-europe-west1}"
 SERVICE_NAME="${SERVICE_NAME:-fundamentals-lab}"
+# One instance stays warm so nobody waits for a cold start.
+MIN_INSTANCES="${MIN_INSTANCES:-1}"
 MAX_INSTANCES="${MAX_INSTANCES:-2}"
 # Most the AI reading may spend in one day (UTC) and over the service's whole life, in USD.
 READING_DAILY_MAX_USD="${READING_DAILY_MAX_USD:-0.50}"
@@ -133,7 +135,7 @@ gcp run deploy "$SERVICE_NAME" \
   --port 8080 \
   --cpu 1 \
   --memory 1Gi \
-  --min-instances 0 \
+  --min-instances "$MIN_INSTANCES" \
   --max-instances "$MAX_INSTANCES" \
   --timeout 120 \
   --set-secrets "${SECRETS#,}" \

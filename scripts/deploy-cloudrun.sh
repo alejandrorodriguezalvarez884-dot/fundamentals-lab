@@ -28,8 +28,8 @@ command -v gcloud >/dev/null || fail "gcloud is not installed."
 GCP_PROJECT="${GCP_PROJECT:-$(gcloud config get-value project 2>/dev/null || true)}"
 GCP_REGION="${GCP_REGION:-europe-west1}"
 SERVICE_NAME="${SERVICE_NAME:-fundamentals-lab}"
-# One instance stays warm so nobody waits for a cold start.
-MIN_INSTANCES="${MIN_INSTANCES:-1}"
+# Scales to zero; MIN_INSTANCES=1 keeps one instance warm.
+MIN_INSTANCES="${MIN_INSTANCES:-0}"
 MAX_INSTANCES="${MAX_INSTANCES:-2}"
 # Most the AI reading may spend in one day (UTC) and over the service's whole life, in USD.
 READING_DAILY_MAX_USD="${READING_DAILY_MAX_USD:-0.50}"

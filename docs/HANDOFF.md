@@ -25,6 +25,11 @@ Decisiones del usuario ese día:
 
 ## Dónde estamos
 
+> 2026-10-17: **De vuelta a escalar a cero.** Por decisión del usuario, `fundamentals-lab` vuelve a
+> `--min-instances 0` (revisión `fundamentals-lab-00021-f8g`, hecha con `gcloud run services update`, sin
+> reconstruir), y `scripts/deploy-cloudrun.sh` pone 0 por defecto (`MIN_INSTANCES=1 make deploy`
+> deja una instancia encendida). La nota de abajo queda como historia.
+
 > 2026-10-15: **Una instancia siempre encendida.** Para el lanzamiento, por decisión del usuario,
 > `fundamentals-lab` tiene `--min-instances 1` (revisión `fundamentals-lab-00020-fwj`, hecha con `gcloud run services update`,
 > sin reconstruir): nadie espera un arranque en frío y las cachés en memoria duran. Cuesta
